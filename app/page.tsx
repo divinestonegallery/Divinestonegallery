@@ -221,8 +221,8 @@ export default function Home() {
           <div className={`${styles.customGrid} site-container`}>
             <div className={styles.customImage}>
               <Image
-                src="/brand/brand-cover.jpg"
-                alt="Divine Stone Gallery Krishna with cow marble sculpture in a temple setting"
+                src="/catalog/ram-darbar-24.jpg"
+                alt="Complete 24-inch Ram Darbar marble moorti set"
                 fill
                 sizes="(max-width: 900px) 100vw, 54vw"
               />

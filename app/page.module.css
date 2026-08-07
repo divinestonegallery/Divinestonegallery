@@ -90,7 +90,7 @@
   inset: 0 0 2rem;
   overflow: hidden;
   border-radius: 20rem 20rem var(--radius-lg) var(--radius-lg);
-  background: #cfc0ad;
+  background: #8f755f;
   box-shadow: var(--shadow-lifted);
 }
 
@@ -104,8 +104,8 @@
 }
 
 .heroImageFrame img {
-  object-fit: cover;
-  object-position: center 34%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .heroImageNote {
@@ -220,7 +220,7 @@
 .deityCard {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 0.72;
+  aspect-ratio: 0.8;
   border-radius: var(--radius-lg);
   background: #d7cab8;
 }
@@ -229,18 +229,11 @@
 .workImage img,
 .customImage img,
 .heritageImage img {
-  object-fit: cover;
-  transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+  object-fit: contain;
 }
 
 .deityCard img {
   object-position: center top;
-}
-
-.deityCard:hover img,
-.workCard:hover .workImage img,
-.heritageImage:hover img {
-  transform: scale(1.035);
 }
 
 .imageVeil {
@@ -330,7 +323,7 @@
   overflow: hidden;
   aspect-ratio: 0.8;
   border-radius: var(--radius-lg);
-  background: var(--surface-muted);
+  background: #e7ded2;
 }
 
 .workImage img {
@@ -382,11 +375,11 @@
   overflow: hidden;
   min-height: 570px;
   border-radius: var(--radius-lg);
-  background: #463a2d;
+  background: #171512;
 }
 
 .customImage img {
-  object-position: 74% center;
+  object-position: center;
 }
 
 .customCopy .eyebrow {
@@ -611,10 +604,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .deityCard {
-    aspect-ratio: 0.9;
-  }
-
   .assuranceGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -739,7 +728,7 @@
   }
 
   .deityCard {
-    aspect-ratio: 0.76;
+    aspect-ratio: 0.8;
   }
 
   .deityCardCopy {
@@ -768,7 +757,7 @@
   }
 
   .workImage {
-    aspect-ratio: 0.72;
+    aspect-ratio: 0.8;
   }
 
   .workInfo > span {
@@ -820,10 +809,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .deityCard img,
-  .workImage img,
-  .customImage img,
-  .heritageImage img,
   .cardArrow {
     transition: none;
   }
