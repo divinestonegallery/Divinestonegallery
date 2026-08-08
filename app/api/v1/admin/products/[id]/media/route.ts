@@ -12,7 +12,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const authorization = await authorizeStaff(request);
   if (!authorization.authorized) return Response.json({ error: { code: "STAFF_REQUIRED", message: "Staff access is required." } }, { status: authorization.status });
   const { id: productId } = await params;
-  if (declaredBodyExceeds(request, 13 * 1024 * 1024)) return Response.json({ error: { code: "UPLOAD_TOO_LARGE", message: "Image upload is too large." } }, { status: 413 });
+  if (declaredBodyExceeds(request, 4_200_000)) return Response.json({ error: { code: "UPLOAD_TOO_LARGE", message: "Image upload is too large." } }, { status: 413 });
 
   let form: FormData;
   try { form = await request.formData(); } catch { return Response.json({ error: { code: "INVALID_UPLOAD", message: "A valid image upload is required." } }, { status: 400 }); }
@@ -20,7 +20,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const altText = typeof form.get("altText") === "string" ? String(form.get("altText")).trim().slice(0, 300) : "";
   if (!(file instanceof File)) return Response.json({ error: { code: "IMAGE_REQUIRED", message: "Choose a JPEG, PNG or WebP image." } }, { status: 400 });
   const image = await validateProductImage(file);
-  if (!image) return Response.json({ error: { code: "INVALID_IMAGE", message: "Use a valid JPEG, PNG or WebP image up to 12 MB." } }, { status: 400 });
+  if (!image) return Response.json({ error: { code: "INVALID_IMAGE", message: "Use a valid optimized JPEG, PNG or WebP image up to 4 MB." } }, { status: 400 });
 
   const db = getDb();
   const [product] = await db.select({ id: products.id, name: products.name }).from(products).where(eq(products.id, productId)).limit(1);
@@ -28,9 +28,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const mediaId = `media:${crypto.randomUUID()}`;
   const safeProductId = productId.replace(/[^a-zA-Z0-9_-]/g, "_");
-  const r2Key = `products/${safeProductId}/${crypto.randomUUID()}.${image.extension}`;
+  const storageKey = `products/${safeProductId}/${crypto.randomUUID()}.${image.extension}`;
   const bucket = getMediaBucket();
-  await bucket.put(r2Key, image.bytes, {
+  await bucket.put(storageKey, image.bytes, {
     httpMetadata: { contentType: image.contentType, cacheControl: "public, max-age=31536000, immutable" },
     customMetadata: { productId, mediaId },
   });
@@ -41,7 +41,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       db.insert(mediaAssets).values({
         id: mediaId,
         uploadedByUserId: authorization.userId,
-        r2Key,
+        storageKey,
         originalFilename: file.name.slice(0, 255) || `product.${image.extension}`,
         contentType: image.contentType,
         byteSize: file.size,
@@ -57,11 +57,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         action: "product_media.created",
         entityType: "product_media",
         entityId: mediaId,
-        changesJson: JSON.stringify({ productId, r2Key, contentType: image.contentType, byteSize: file.size }),
+        changesJson: JSON.stringify({ productId, storageKey, contentType: image.contentType, byteSize: file.size }),
       }),
     ]);
   } catch {
-    await bucket.delete(r2Key);
+    await bucket.delete(storageKey);
     return Response.json({ error: { code: "MEDIA_SAVE_FAILED", message: "The image could not be attached to the product." } }, { status: 503 });
   }
 

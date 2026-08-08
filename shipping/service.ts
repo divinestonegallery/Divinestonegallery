@@ -127,7 +127,7 @@ export async function quoteShippingRates(
     expiresAt,
   }));
   const statements = [
-    db.update(shippingQuotes).set({ status: "expired", updatedAt: sql`(unixepoch())` }).where(and(eq(shippingQuotes.userId, userId), eq(shippingQuotes.status, "active"))),
+    db.update(shippingQuotes).set({ status: "expired", updatedAt: sql`(extract(epoch from now())::integer)` }).where(and(eq(shippingQuotes.userId, userId), eq(shippingQuotes.status, "active"))),
     ...inserts,
   ];
   await db.batch(statements as unknown as Parameters<typeof db.batch>[0]);

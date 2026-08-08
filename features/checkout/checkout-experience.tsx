@@ -124,7 +124,7 @@ function money(value: number) {
 }
 
 function UnconfiguredCheckout() {
-  return <div className={styles.centerCard}><ShieldCheck aria-hidden="true" size={30} /><h2 className="font-display">Secure checkout is ready for account activation.</h2><p>Add the private Clerk, D1 and Shiprocket settings before accepting customer orders.</p><Link className={buttonClassName({ size: "lg" })} href="/account">Open account setup <ArrowRight aria-hidden="true" size={17} /></Link></div>;
+  return <div className={styles.centerCard}><ShieldCheck aria-hidden="true" size={30} /><h2 className="font-display">Secure checkout is ready for account activation.</h2><p>Add the private Clerk, PostgreSQL and Shiprocket settings before accepting customer orders.</p><Link className={buttonClassName({ size: "lg" })} href="/account">Open account setup <ArrowRight aria-hidden="true" size={17} /></Link></div>;
 }
 
 function SignedInCheckout({ products }: { products: CatalogItem[] }) {

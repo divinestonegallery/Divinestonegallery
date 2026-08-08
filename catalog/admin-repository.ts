@@ -132,7 +132,7 @@ export async function updateAdminProduct(
   await db.batch([
     db
       .update(products)
-      .set({ ...patch, updatedAt: sql`(unixepoch())` })
+      .set({ ...patch, updatedAt: sql`(extract(epoch from now())::integer)` })
       .where(eq(products.id, id)),
     db.insert(auditLogs).values({
       id: crypto.randomUUID(),
@@ -203,7 +203,7 @@ export async function updateAdminVariant(
   await db.batch([
     db
       .update(productVariants)
-      .set({ ...patch, updatedAt: sql`(unixepoch())` })
+      .set({ ...patch, updatedAt: sql`(extract(epoch from now())::integer)` })
       .where(eq(productVariants.id, id)),
     db.insert(auditLogs).values({
       id: crypto.randomUUID(),

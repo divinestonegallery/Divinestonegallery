@@ -27,13 +27,13 @@ This architecture supports the agreed India-first business model:
 
 ```mermaid
 flowchart LR
-  Customer["Customer browser"] --> App["Vinext storefront + account"]
-  Staff["Staff browser"] --> Admin["Vinext admin area"]
+  Customer["Customer browser"] --> App["Next.js storefront + account"]
+  Staff["Staff browser"] --> Admin["Next.js admin area"]
   App --> API["Server route layer /api/v1"]
   Admin --> API
   API --> Auth["Clerk authentication"]
-  API --> DB["Cloudflare D1"]
-  API --> Media["Cloudflare R2 MEDIA bucket"]
+  API --> DB["PostgreSQL via DATABASE_URL"]
+  API --> Media["Private S3-compatible storage"]
   API --> Payments["Razorpay"]
   API --> Shipping["Shiprocket rate adapter"]
   API --> Messages["Resend / MSG91 / Meta WhatsApp"]
@@ -45,16 +45,13 @@ flowchart LR
 
 The storefront and admin area live in one application, but all authoritative writes pass through server routes. Browser storage may keep temporary UI preferences, but it is not the source of truth for accounts, wishlist items, carts, stock, orders or commission progress.
 
-Signed-out visitors may build a temporary wishlist and enquiry bag in browser storage. On the first authenticated collection request, those product IDs are validated and merged idempotently into the customer's D1 wishlist and active quote-intent cart. Local values are erased only after the server confirms the merge; from then on, every mutation is authorized from the Clerk token and written to D1.
+Signed-out visitors may build a temporary wishlist and enquiry bag in browser storage. On the first authenticated collection request, those product IDs are validated and merged idempotently into the customer's PostgreSQL wishlist and active quote-intent cart. Local values are erased only after the server confirms the merge; from then on, every mutation is authorized from the Clerk token and written to PostgreSQL.
 
 ## Persistence
 
-The logical runtime bindings are declared in `.openai/hosting.json`:
+Runtime resources are provider-neutral: `DATABASE_URL` connects PostgreSQL and the `S3_*` variables connect private object storage. Vercel and AWS supply these values through their encrypted environment settings.
 
-- `DB`: D1 database for structured, relational data;
-- `MEDIA`: R2 bucket for product photos, videos, custom references and milestone evidence.
-
-`db/schema.ts` is the canonical Drizzle schema. Generated SQL lives in `drizzle/` and must be reviewed before it is applied. `db/index.ts` is the only database-binding entry point. `storage/media.ts` is the media-binding entry point.
+`db/schema.ts` is the canonical Drizzle schema. Generated SQL lives in `drizzle/` and must be reviewed before it is applied. `db/index.ts` is the only database connection entry point. `storage/media.ts` is the media adapter entry point.
 
 Database conventions:
 
@@ -66,7 +63,7 @@ Database conventions:
 - provider webhook IDs are unique to make retries idempotent;
 - staff mutations create audit records;
 - tax documents retain CGST, SGST and IGST as separate immutable paise amounts;
-- `PRAGMA foreign_keys = ON` and `PRAGMA optimize` are part of migration/maintenance operations.
+- PostgreSQL foreign keys, checks, partial unique indexes and transactional batches enforce data integrity.
 
 ## Authentication and authorization
 
@@ -136,7 +133,7 @@ stateDiagram-v2
   Quoted --> Cancelled
 ```
 
-Staff sets the quotation and advance amount separately for each commission. References uploaded through the website or received through WhatsApp are copied to R2 and linked to the commission. Every major milestone contains its own media and approval state. Customer approval or a change request is an authenticated, audited action.
+Staff sets the quotation and advance amount separately for each commission. References uploaded through the website or received through WhatsApp are copied to S3-compatible storage and linked to the commission. Every major milestone contains its own media and approval state. Customer approval or a change request is an authenticated, audited action.
 
 ## Integration boundaries
 
@@ -146,7 +143,7 @@ Business logic calls narrow adapters rather than exposing provider SDKs througho
 - `PaymentProvider`: create/verify/capture/refund a payment;
 - `ShiprocketShippingProvider`: authenticate server-side and return domestic surface rates from postcode, per-parcel packed dimensions, weight, declared value and COD/prepaid mode;
 - `EmailProvider`, `SmsProvider`, `WhatsAppProvider`: deliver queued, templated messages through Resend, MSG91 and Meta;
-- `MediaService`: validate type/size, issue upload permission, record the R2 object.
+- `MediaService`: validate type/size, issue upload permission, record the S3-compatible storage object.
 
 Incoming Clerk and Razorpay webhooks require signature verification and idempotency records before business state changes. Notification delivery uses a high-entropy worker credential, retry scheduling and staff-visible failure state.
 
@@ -154,26 +151,26 @@ Incoming Clerk and Razorpay webhooks require signature verification and idempote
 
 - Allowed customer image formats are JPEG, PNG and WebP. Video and PDF uploads are not accepted in the initial release.
 - The server validates MIME signature and byte size, not only the file extension.
-- R2 object keys are generated by the server and never contain the original filename.
+- S3-compatible storage object keys are generated by the server and never contain the original filename.
 - Private custom references use authenticated download routes or short-lived signed access.
 - Product assets can be public after staff approval and optimization.
-- D1 stores ownership, object key, dimensions, type, checksum and processing status.
+- PostgreSQL stores ownership, object key, dimensions, type, checksum and processing status.
 
 ## Environments and secrets
 
 Use separate local, staging and production resources. Only non-secret business identity values belong in `.env.example`. Authentication keys, payment keys, webhook signing secrets, messaging credentials and shipping credentials are server-only environment secrets. No `NEXT_PUBLIC_` variable may contain a secret.
 
-The production canonical origin is `https://divinestonegallery.com`; local development remains `http://localhost:3000`. A staging site must use isolated D1/R2 resources and provider test modes. `npm run deploy:check` rejects an incomplete production configuration before release verification can pass.
+The production canonical origin is `https://divinestonegallery.com`; local development remains `http://localhost:3000`. A staging site must use isolated PostgreSQL/S3-compatible storage resources and provider test modes. `npm run deploy:check` rejects an incomplete production configuration before release verification can pass.
 
 ## Current implementation status
 
 Implemented in the application:
 
 1. Clerk authentication, protected customer preparation and staff authorization.
-2. D1/R2 catalogue migrations, seeded catalogue, public catalogue reads and product administration.
+2. PostgreSQL and S3-compatible catalogue persistence, seeded catalogue, public reads and product administration.
 3. Account-backed wishlist and enquiry-bag endpoints with signed-out collection migration.
 4. Transaction-safe checkout validation, idempotent order placement, inventory decrement, payment records and customer order history.
-5. Shiprocket surface-rate integration, per-work package calculation, 30-minute D1 quotes and manual freight fallback.
+5. Shiprocket surface-rate integration, per-work package calculation, 30-minute PostgreSQL quotes and manual freight fallback.
 6. Razorpay intent, browser verification and signed idempotent payment webhook handling.
 7. Custom commission submission, quotation, milestone media, customer approval and staff management.
 8. Retried Resend, MSG91 and Meta WhatsApp delivery, including durable WhatsApp consent and withdrawal history.

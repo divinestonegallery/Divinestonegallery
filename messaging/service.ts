@@ -67,17 +67,17 @@ export async function processNotificationQueue(limit = 20) {
     )).orderBy(asc(notifications.scheduledAt), asc(notifications.createdAt)).limit(Math.min(Math.max(limit, 1), 50));
   const result = { examined: candidates.length, sent: 0, failed: 0, skipped: 0 };
   for (const candidate of candidates) {
-    const [claimed] = await db.update(notifications).set({ status: "processing", attempts: sql`${notifications.attempts} + 1`, scheduledAt: now + 300, lastError: null, updatedAt: sql`(unixepoch())` })
+    const [claimed] = await db.update(notifications).set({ status: "processing", attempts: sql`${notifications.attempts} + 1`, scheduledAt: now + 300, lastError: null, updatedAt: sql`(extract(epoch from now())::integer)` })
       .where(and(eq(notifications.id, candidate.id), lte(notifications.scheduledAt, now), inArray(notifications.status, ["queued", "failed", "processing"]), lt(notifications.attempts, 5)))
       .returning({ id: notifications.id, attempts: notifications.attempts });
     if (!claimed) { result.skipped += 1; continue; }
     try {
       const delivered = await deliver(claimed.id);
-      await db.update(notifications).set({ status: "sent", provider: delivered.provider, providerMessageId: delivered.providerMessageId, sentAt: sql`(unixepoch())`, lastError: null, updatedAt: sql`(unixepoch())` }).where(and(eq(notifications.id, claimed.id), eq(notifications.status, "processing")));
+      await db.update(notifications).set({ status: "sent", provider: delivered.provider, providerMessageId: delivered.providerMessageId, sentAt: sql`(extract(epoch from now())::integer)`, lastError: null, updatedAt: sql`(extract(epoch from now())::integer)` }).where(and(eq(notifications.id, claimed.id), eq(notifications.status, "processing")));
       result.sent += 1;
     } catch (error) {
       const delay = Math.min(21_600, 60 * 2 ** Math.max(0, claimed.attempts - 1));
-      await db.update(notifications).set({ status: "failed", lastError: (error instanceof Error ? error.message : "DELIVERY_FAILED").slice(0, 500), scheduledAt: now + delay, updatedAt: sql`(unixepoch())` }).where(and(eq(notifications.id, claimed.id), eq(notifications.status, "processing")));
+      await db.update(notifications).set({ status: "failed", lastError: (error instanceof Error ? error.message : "DELIVERY_FAILED").slice(0, 500), scheduledAt: now + delay, updatedAt: sql`(extract(epoch from now())::integer)` }).where(and(eq(notifications.id, claimed.id), eq(notifications.status, "processing")));
       result.failed += 1;
     }
   }

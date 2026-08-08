@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { CookieConsent } from "@/components/site/cookie-consent";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -21,7 +22,9 @@ export default async function ShopPage() {
     <ToastProvider>
       <SiteHeader />
       <main id="main-content" tabIndex={-1}>
-        <ShopCatalog products={products} breadcrumbs={<Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Shop" }]} />} />
+        <Suspense fallback={<div className="site-container" aria-live="polite">Preparing the marble collection…</div>}>
+          <ShopCatalog products={products} breadcrumbs={<Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Shop" }]} />} />
+        </Suspense>
       </main>
       <SiteFooter />
       <WhatsAppAssistance />

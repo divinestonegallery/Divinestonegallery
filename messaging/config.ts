@@ -50,7 +50,7 @@ export function getWhatsAppConfiguration() {
 }
 
 export function getNotificationWorkerSecret() {
-  return process.env.NOTIFICATION_WORKER_SECRET?.trim() || null;
+  return process.env.NOTIFICATION_WORKER_SECRET?.trim() || process.env.CRON_SECRET?.trim() || null;
 }
 
 export function notificationCapabilities() {

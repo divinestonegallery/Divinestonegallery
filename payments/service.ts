@@ -74,8 +74,8 @@ async function applySuccessfulPayment(
       status: nextStatus,
       failureCode: null,
       failureMessage: null,
-      paidAt: captured ? sql`(unixepoch())` : null,
-      updatedAt: sql`(unixepoch())`,
+      paidAt: captured ? sql`(extract(epoch from now())::integer)` : null,
+      updatedAt: sql`(extract(epoch from now())::integer)`,
     })
     .where(
       and(
@@ -87,7 +87,7 @@ async function applySuccessfulPayment(
   if (captured) {
     statements.push(
       db.update(orders)
-        .set({ paymentStatus: "paid", updatedAt: sql`(unixepoch())` })
+        .set({ paymentStatus: "paid", updatedAt: sql`(extract(epoch from now())::integer)` })
         .where(and(eq(orders.id, record.orderId), sql`${orders.paymentStatus} != 'refunded'`)),
     );
     const recipients = [
@@ -175,7 +175,7 @@ async function claimWebhook(
   if (!existing || existing.payloadSha256 !== payloadSha256 || existing.status !== "failed") return null;
   const [reclaimed] = await db
     .update(webhookEvents)
-    .set({ status: "received", attempts: sql`${webhookEvents.attempts} + 1`, lastError: null, updatedAt: sql`(unixepoch())` })
+    .set({ status: "received", attempts: sql`${webhookEvents.attempts} + 1`, lastError: null, updatedAt: sql`(extract(epoch from now())::integer)` })
     .where(and(eq(webhookEvents.id, existing.id), eq(webhookEvents.status, "failed")))
     .returning({ id: webhookEvents.id });
   return reclaimed?.id ?? null;
@@ -186,8 +186,8 @@ async function finishWebhook(id: string, status: "processed" | "ignored" | "fail
   await db.update(webhookEvents).set({
     status,
     lastError: lastError ?? null,
-    processedAt: status === "processed" || status === "ignored" ? sql`(unixepoch())` : null,
-    updatedAt: sql`(unixepoch())`,
+    processedAt: status === "processed" || status === "ignored" ? sql`(extract(epoch from now())::integer)` : null,
+    updatedAt: sql`(extract(epoch from now())::integer)`,
   }).where(eq(webhookEvents.id, id));
 }
 
@@ -202,9 +202,9 @@ async function applyFailedPayment(
       status: "failed",
       failureCode: remote.error_code,
       failureMessage: remote.error_description,
-      updatedAt: sql`(unixepoch())`,
+      updatedAt: sql`(extract(epoch from now())::integer)`,
     }).where(and(eq(payments.id, record.paymentId), sql`${payments.status} not in ('captured', 'refunded')`)),
-    db.update(orders).set({ paymentStatus: "failed", updatedAt: sql`(unixepoch())` })
+    db.update(orders).set({ paymentStatus: "failed", updatedAt: sql`(extract(epoch from now())::integer)` })
       .where(and(eq(orders.id, record.orderId), sql`${orders.paymentStatus} not in ('paid', 'refunded')`)),
   ]);
 }

@@ -59,6 +59,6 @@ function ConnectedOrderHistory() {
 
 export function OrderHistory() {
   const configured = useAuthConfigured();
-  if (!configured) return <div className={styles.centerCard}><ShieldCheck aria-hidden="true" size={30} /><h2 className="font-display">Order history activates with secure accounts.</h2><p>Add the Clerk and D1 environment settings to open private customer orders.</p></div>;
+  if (!configured) return <div className={styles.centerCard}><ShieldCheck aria-hidden="true" size={30} /><h2 className="font-display">Order history activates with secure accounts.</h2><p>Add the Clerk and PostgreSQL environment settings to open private customer orders.</p></div>;
   return <ConnectedOrderHistory />;
 }

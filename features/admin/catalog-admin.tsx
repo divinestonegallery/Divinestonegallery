@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Check, ChevronDown, ExternalLink, PackagePlus, RefreshCw, Save, Search, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { prepareImageForUpload } from "@/features/uploads/prepare-image";
 import styles from "./catalog-admin.module.css";
 
 type Variant = {
@@ -125,9 +126,9 @@ function ProductEditor({ product, refresh }: { product: AdminProduct; refresh: (
   async function uploadImage(file: File) {
     setSaving(true);
     const form = new FormData();
-    form.set("file", file);
     form.set("altText", `${product.name} hand-carved marble work`);
     try {
+      form.set("file", await prepareImageForUpload(file));
       const response = await fetch(`/api/v1/admin/products/${encodeURIComponent(product.id)}/media`, { method: "POST", body: form });
       if (!response.ok) throw new Error();
       showToast(`Image added to ${product.name}.`);

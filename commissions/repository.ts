@@ -119,10 +119,19 @@ export async function updateCommission(id: string, patch: Record<string, unknown
   if (!commission) return null;
   const customer = await customerById(commission.userId);
   if (!customer) throw new Error("CUSTOMER_NOT_FOUND");
-  const templateKey = patch.status === "quoted" || patch.status === "awaiting_advance" ? "commission_quote_ready" : "commission_status_updated";
+  const notification = typeof patch.status === "string"
+    ? await notificationStatements(
+      db,
+      customer,
+      commission.id,
+      patch.status === "quoted" || patch.status === "awaiting_advance"
+        ? "commission_quote_ready"
+        : "commission_status_updated",
+    )
+    : [];
   await db.batch([
-    db.update(customCommissions).set({ ...patch, assignedStaffUserId: actorUserId, updatedAt: sql`(unixepoch())` }).where(eq(customCommissions.id, id)),
-    ...(await notificationStatements(db, customer, id, templateKey)),
+    db.update(customCommissions).set({ ...patch, assignedStaffUserId: actorUserId, updatedAt: sql`(extract(epoch from now())::integer)` }).where(eq(customCommissions.id, id)),
+    ...notification,
     db.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId, action: "commission.updated", entityType: "custom_commission", entityId: id, changesJson: JSON.stringify(patch) }),
   ] as unknown as Parameters<typeof db.batch>[0]);
   return getCommissionById(id);
@@ -154,8 +163,8 @@ export async function decideMilestone(userId: string, number: string, milestoneI
     commissionStatus = Number(remaining?.count ?? 0) === 0 ? "ready_to_ship" : "in_production";
   }
   await db.batch([
-    db.update(commissionMilestones).set({ status: decision, customerNote: note, approvedAt: decision === "approved" ? sql`(unixepoch())` : null, updatedAt: sql`(unixepoch())` }).where(eq(commissionMilestones.id, milestoneId)),
-    db.update(customCommissions).set({ status: commissionStatus, updatedAt: sql`(unixepoch())` }).where(eq(customCommissions.id, row.commissionId)),
+    db.update(commissionMilestones).set({ status: decision, customerNote: note, approvedAt: decision === "approved" ? sql`(extract(epoch from now())::integer)` : null, updatedAt: sql`(extract(epoch from now())::integer)` }).where(eq(commissionMilestones.id, milestoneId)),
+    db.update(customCommissions).set({ status: commissionStatus, updatedAt: sql`(extract(epoch from now())::integer)` }).where(eq(customCommissions.id, row.commissionId)),
     db.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId: userId, action: `commission_milestone.${decision}`, entityType: "commission_milestone", entityId: milestoneId, changesJson: JSON.stringify({ note }) }),
   ]);
   return getCustomerCommission(userId, number);
@@ -163,7 +172,7 @@ export async function decideMilestone(userId: string, number: string, milestoneI
 
 export type CommissionAsset = {
   id: string;
-  r2Key: string;
+  storageKey: string;
   originalFilename: string;
   contentType: "image/jpeg" | "image/png" | "image/webp";
   byteSize: number;
@@ -207,8 +216,8 @@ export async function submitMilestone(
   const customer = await customerById(row.userId);
   if (!customer) throw new Error("CUSTOMER_NOT_FOUND");
   const statements: unknown[] = [
-    db.update(commissionMilestones).set({ status: "submitted", staffNote, submittedAt: sql`(unixepoch())`, approvedAt: null, updatedAt: sql`(unixepoch())` }).where(eq(commissionMilestones.id, milestoneId)),
-    db.update(customCommissions).set({ status: "awaiting_approval", assignedStaffUserId: actorUserId, updatedAt: sql`(unixepoch())` }).where(eq(customCommissions.id, commissionId)),
+    db.update(commissionMilestones).set({ status: "submitted", staffNote, submittedAt: sql`(extract(epoch from now())::integer)`, approvedAt: null, updatedAt: sql`(extract(epoch from now())::integer)` }).where(eq(commissionMilestones.id, milestoneId)),
+    db.update(customCommissions).set({ status: "awaiting_approval", assignedStaffUserId: actorUserId, updatedAt: sql`(extract(epoch from now())::integer)` }).where(eq(customCommissions.id, commissionId)),
     ...assets.map((asset) => db.insert(mediaAssets).values({ ...asset, uploadedByUserId: actorUserId, kind: "image", status: "ready" })),
     ...assets.map((asset, index) => db.insert(milestoneMedia).values({ milestoneId, mediaAssetId: asset.id, sortOrder: index + 1 })),
     ...(await notificationStatements(db, customer, commissionId, "commission_milestone_ready")),

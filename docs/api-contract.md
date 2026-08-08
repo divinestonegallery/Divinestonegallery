@@ -18,16 +18,16 @@ Write endpoints accept an `Idempotency-Key` header where duplicate submission co
 
 - `GET /products` — filter by category, deity, size, availability and sales mode.
 - `GET /products/:slug` — product, active variants, media and approved reviews.
-- `GET /media/:id` — stream an approved public product image from R2.
+- `GET /media/:id` — stream an approved public product image from S3-compatible storage.
 - `GET /categories`
 - `GET /deities`
-- `POST /shipping/rates` — authenticated Shiprocket surface rates from the exact cart, pickup/delivery postcodes, payment mode and each work's packed dimensions, weight and value. Successful options are stored as 30-minute D1 quotes.
+- `POST /shipping/rates` — authenticated Shiprocket surface rates from the exact cart, pickup/delivery postcodes, payment mode and each work's packed dimensions, weight and value. Successful options are stored as 30-minute PostgreSQL quotes.
 
 ## Authentication and account
 
 - `GET /sign-in/*` — Clerk-hosted sign-in flow inside the gallery website.
 - `GET /sign-up/*` — Clerk-hosted registration flow inside the gallery website.
-- `POST /auth/sync` — verify the Clerk session and prepare the D1 customer record.
+- `POST /auth/sync` — verify the Clerk session and prepare the PostgreSQL customer record.
 - `GET /me`
 - `PATCH /me` — currently updates the optional transactional WhatsApp preference and writes an auditable consent event.
 - `GET|POST /me/addresses`
@@ -44,7 +44,7 @@ Clerk handles phone OTP, email/password, Google OAuth, reset flows and logout. G
 - `GET|POST|DELETE /me/cart` — read, add to or clear the quote-intent enquiry bag.
 - `DELETE /me/cart/items/:productId`
 
-Wishlist and enquiry-bag endpoints infer ownership exclusively from the verified Clerk token. Product additions are accepted only for active products with an active variant. Device-local collections are retained if migration fails, merged idempotently after sign-in, and cleared from the device only after D1 confirms the merge. D1 is then authoritative, and the client refreshes account collections when the tab becomes active.
+Wishlist and enquiry-bag endpoints infer ownership exclusively from the verified Clerk token. Product additions are accepted only for active products with an active variant. Device-local collections are retained if migration fails, merged idempotently after sign-in, and cleared from the device only after PostgreSQL confirms the merge. PostgreSQL is then authoritative, and the client refreshes account collections when the tab becomes active.
 
 ## Quotes and checkout
 
@@ -61,7 +61,7 @@ Wishlist and enquiry-bag endpoints infer ownership exclusively from the verified
 - `GET /orders/:orderNumber/invoices`
 - `POST /orders/:orderNumber/return-request`
 
-Order creation always recalculates product price, GST and stock on the server, then compares them with an unexpired server-issued shipping quote belonging to the same customer and exact cart fingerprint. The request references IDs, addresses and customer choices; it never supplies authoritative totals. Stock decrements, order/item creation, shipping-quote consumption, payment creation, notification queuing and enquiry-bag clearing run in one D1 batch. The database stock check and unique idempotency index abort the whole batch on a race or repeated conflicting submission.
+Order creation always recalculates product price, GST and stock on the server, then compares them with an unexpired server-issued shipping quote belonging to the same customer and exact cart fingerprint. The request references IDs, addresses and customer choices; it never supplies authoritative totals. Stock decrements, order/item creation, shipping-quote consumption, payment creation, notification queuing and enquiry-bag clearing run in one PostgreSQL batch. The database stock check and unique idempotency index abort the whole batch on a race or repeated conflicting submission.
 
 Bank-transfer, COD and Razorpay online orders are supported by the transaction service. COD additionally requires a Clerk-verified phone, an eligible Shiprocket rate and enters `approval_pending`. Online order creation fails closed with `ONLINE_PROVIDER_REQUIRED` until Razorpay is configured. Final placement accepts only an active quote matching customer, cart fingerprint, destination, payment method, subtotal, GST, chargeable weight and total. Online creation also returns a Razorpay payment session; `POST /api/v1/payments/razorpay/verify` authenticates the customer callback and `POST /api/v1/webhooks/payments/razorpay` consumes signed, idempotent provider events.
 
@@ -74,7 +74,7 @@ Bank-transfer, COD and Razorpay online orders are supported by the transaction s
 - `POST /commissions/:commissionNumber/milestones/:id/approve`
 - `POST /commissions/:commissionNumber/milestones/:id/request-changes`
 
-These endpoints are implemented. Commission submissions require an account, reference and milestone media remain private in R2, quotation amounts use integer paise, and milestone decisions are ownership-checked and audited. Staff management is available at `/admin/commissions`.
+These endpoints are implemented. Commission submissions require an account, reference and milestone media remain private in S3-compatible storage, quotation amounts use integer paise, and milestone decisions are ownership-checked and audited. Staff management is available at `/admin/commissions`.
 
 ## Reviews
 

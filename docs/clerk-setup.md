@@ -50,7 +50,7 @@ Copy its signing secret into:
 CLERK_WEBHOOK_SIGNING_SECRET=whsec_...
 ```
 
-The endpoint verifies every signature before updating D1. A synchronous account preparation request also runs after sign-in, so checkout does not depend on webhook delivery timing.
+The endpoint verifies every signature before updating PostgreSQL. A synchronous account preparation request also runs after sign-in, so checkout does not depend on webhook delivery timing.
 
 ## 5. Production checks
 

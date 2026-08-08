@@ -13,7 +13,7 @@ function heightInches(heightMm: number) {
   return Number((heightMm / 25.4).toFixed(1));
 }
 
-async function readD1Catalog(): Promise<CatalogItem[]> {
+async function readDatabaseCatalog(): Promise<CatalogItem[]> {
   const { getDb } = await import("@/db");
   const db = getDb();
   const rows = await db
@@ -98,7 +98,7 @@ async function readD1Catalog(): Promise<CatalogItem[]> {
 
 export async function getPublicCatalog(): Promise<CatalogItem[]> {
   try {
-    const items = await readD1Catalog();
+    const items = await readDatabaseCatalog();
     return items.length ? items : catalogItems;
   } catch {
     return catalogItems;

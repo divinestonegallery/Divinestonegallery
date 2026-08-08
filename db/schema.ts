@@ -1,20 +1,21 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   index,
   integer,
+  pgTable,
   primaryKey,
-  sqliteTable,
   text,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 
 const timestamps = {
-  createdAt: integer("created_at").notNull().default(sql`(unixepoch())`),
-  updatedAt: integer("updated_at").notNull().default(sql`(unixepoch())`),
+  createdAt: integer("created_at").notNull().default(sql`(extract(epoch from now())::integer)`),
+  updatedAt: integer("updated_at").notNull().default(sql`(extract(epoch from now())::integer)`),
 };
 
-export const users = sqliteTable(
+export const users = pgTable(
   "users",
   {
     id: text("id").primaryKey(),
@@ -44,7 +45,7 @@ export const users = sqliteTable(
   ],
 );
 
-export const communicationConsentEvents = sqliteTable(
+export const communicationConsentEvents = pgTable(
   "communication_consent_events",
   {
     id: text("id").primaryKey(),
@@ -56,7 +57,7 @@ export const communicationConsentEvents = sqliteTable(
     action: text("action", { enum: ["granted", "withdrawn"] }).notNull(),
     policyVersion: text("policy_version").notNull(),
     source: text("source", { enum: ["account"] }).notNull(),
-    createdAt: integer("created_at").notNull().default(sql`(unixepoch())`),
+    createdAt: integer("created_at").notNull().default(sql`(extract(epoch from now())::integer)`),
   },
   (table) => [
     index("communication_consent_user_timeline_idx").on(
@@ -68,7 +69,7 @@ export const communicationConsentEvents = sqliteTable(
   ],
 );
 
-export const authIdentities = sqliteTable(
+export const authIdentities = pgTable(
   "auth_identities",
   {
     id: text("id").primaryKey(),
@@ -89,7 +90,7 @@ export const authIdentities = sqliteTable(
   ],
 );
 
-export const addresses = sqliteTable(
+export const addresses = pgTable(
   "addresses",
   {
     id: text("id").primaryKey(),
@@ -106,7 +107,7 @@ export const addresses = sqliteTable(
     state: text("state").notNull(),
     postalCode: text("postal_code").notNull(),
     countryCode: text("country_code").notNull().default("IN"),
-    isDefault: integer("is_default", { mode: "boolean" }).notNull().default(false),
+    isDefault: boolean("is_default").notNull().default(false),
     ...timestamps,
   },
   (table) => [
@@ -115,7 +116,7 @@ export const addresses = sqliteTable(
   ],
 );
 
-export const staffMembers = sqliteTable(
+export const staffMembers = pgTable(
   "staff_members",
   {
     id: text("id").primaryKey(),
@@ -139,7 +140,7 @@ export const staffMembers = sqliteTable(
   ],
 );
 
-export const categories = sqliteTable(
+export const categories = pgTable(
   "categories",
   {
     id: text("id").primaryKey(),
@@ -147,26 +148,26 @@ export const categories = sqliteTable(
     name: text("name").notNull(),
     description: text("description"),
     sortOrder: integer("sort_order").notNull().default(0),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    isActive: boolean("is_active").notNull().default(true),
     ...timestamps,
   },
   (table) => [uniqueIndex("categories_slug_unique").on(table.slug)],
 );
 
-export const deities = sqliteTable(
+export const deities = pgTable(
   "deities",
   {
     id: text("id").primaryKey(),
     slug: text("slug").notNull(),
     name: text("name").notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    isActive: boolean("is_active").notNull().default(true),
     ...timestamps,
   },
   (table) => [uniqueIndex("deities_slug_unique").on(table.slug)],
 );
 
-export const products = sqliteTable(
+export const products = pgTable(
   "products",
   {
     id: text("id").primaryKey(),
@@ -187,7 +188,7 @@ export const products = sqliteTable(
     status: text("status", { enum: ["draft", "active", "archived"] })
       .notNull()
       .default("draft"),
-    isFeatured: integer("is_featured", { mode: "boolean" }).notNull().default(false),
+    isFeatured: boolean("is_featured").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
@@ -201,7 +202,7 @@ export const products = sqliteTable(
   ],
 );
 
-export const productVariants = sqliteTable(
+export const productVariants = pgTable(
   "product_variants",
   {
     id: text("id").primaryKey(),
@@ -225,9 +226,9 @@ export const productVariants = sqliteTable(
       .notNull()
       .default("repeatable"),
     stockQuantity: integer("stock_quantity").notNull().default(0),
-    codEligible: integer("cod_eligible", { mode: "boolean" }).notNull().default(true),
+    codEligible: boolean("cod_eligible").notNull().default(true),
     shippingClass: text("shipping_class").notNull().default("marble_sculpture"),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    isActive: boolean("is_active").notNull().default(true),
     ...timestamps,
   },
   (table) => [
@@ -254,14 +255,14 @@ export const productVariants = sqliteTable(
   ],
 );
 
-export const mediaAssets = sqliteTable(
+export const mediaAssets = pgTable(
   "media_assets",
   {
     id: text("id").primaryKey(),
     uploadedByUserId: text("uploaded_by_user_id").references(() => users.id, {
       onDelete: "set null",
     }),
-    r2Key: text("r2_key").notNull(),
+    storageKey: text("storage_key").notNull(),
     publicPath: text("public_path"),
     originalFilename: text("original_filename").notNull(),
     contentType: text("content_type").notNull(),
@@ -277,13 +278,13 @@ export const mediaAssets = sqliteTable(
     ...timestamps,
   },
   (table) => [
-    uniqueIndex("media_assets_r2_key_unique").on(table.r2Key),
+    uniqueIndex("media_assets_storage_key_unique").on(table.storageKey),
     index("media_assets_uploader_idx").on(table.uploadedByUserId, table.createdAt),
     check("media_assets_size_nonnegative", sql`${table.byteSize} >= 0`),
   ],
 );
 
-export const productMedia = sqliteTable(
+export const productMedia = pgTable(
   "product_media",
   {
     productId: text("product_id")
@@ -296,7 +297,7 @@ export const productMedia = sqliteTable(
       onDelete: "cascade",
     }),
     sortOrder: integer("sort_order").notNull().default(0),
-    isPrimary: integer("is_primary", { mode: "boolean" }).notNull().default(false),
+    isPrimary: boolean("is_primary").notNull().default(false),
   },
   (table) => [
     primaryKey({ columns: [table.productId, table.mediaAssetId] }),
@@ -304,7 +305,7 @@ export const productMedia = sqliteTable(
   ],
 );
 
-export const wishlists = sqliteTable(
+export const wishlists = pgTable(
   "wishlists",
   {
     id: text("id").primaryKey(),
@@ -316,7 +317,7 @@ export const wishlists = sqliteTable(
   (table) => [uniqueIndex("wishlists_user_unique").on(table.userId)],
 );
 
-export const wishlistItems = sqliteTable(
+export const wishlistItems = pgTable(
   "wishlist_items",
   {
     wishlistId: text("wishlist_id")
@@ -328,7 +329,7 @@ export const wishlistItems = sqliteTable(
     variantId: text("variant_id").references(() => productVariants.id, {
       onDelete: "cascade",
     }),
-    createdAt: integer("created_at").notNull().default(sql`(unixepoch())`),
+    createdAt: integer("created_at").notNull().default(sql`(extract(epoch from now())::integer)`),
   },
   (table) => [
     primaryKey({ columns: [table.wishlistId, table.productId] }),
@@ -336,7 +337,7 @@ export const wishlistItems = sqliteTable(
   ],
 );
 
-export const carts = sqliteTable(
+export const carts = pgTable(
   "carts",
   {
     id: text("id").primaryKey(),
@@ -351,7 +352,7 @@ export const carts = sqliteTable(
   (table) => [index("carts_user_status_idx").on(table.userId, table.status)],
 );
 
-export const cartItems = sqliteTable(
+export const cartItems = pgTable(
   "cart_items",
   {
     id: text("id").primaryKey(),
@@ -366,8 +367,8 @@ export const cartItems = sqliteTable(
       .references(() => productVariants.id, { onDelete: "cascade" }),
     quantity: integer("quantity").notNull().default(1),
     intent: text("intent", { enum: ["purchase", "quote"] }).notNull().default("purchase"),
-    createdAt: integer("created_at").notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at").notNull().default(sql`(unixepoch())`),
+    createdAt: integer("created_at").notNull().default(sql`(extract(epoch from now())::integer)`),
+    updatedAt: integer("updated_at").notNull().default(sql`(extract(epoch from now())::integer)`),
   },
   (table) => [
     uniqueIndex("cart_items_variant_intent_unique").on(
@@ -380,7 +381,7 @@ export const cartItems = sqliteTable(
   ],
 );
 
-export const quotes = sqliteTable(
+export const quotes = pgTable(
   "quotes",
   {
     id: text("id").primaryKey(),
@@ -411,7 +412,7 @@ export const quotes = sqliteTable(
   ],
 );
 
-export const quoteItems = sqliteTable(
+export const quoteItems = pgTable(
   "quote_items",
   {
     id: text("id").primaryKey(),
@@ -435,7 +436,7 @@ export const quoteItems = sqliteTable(
   ],
 );
 
-export const shippingQuotes = sqliteTable(
+export const shippingQuotes = pgTable(
   "shipping_quotes",
   {
     id: text("id").primaryKey(),
@@ -476,7 +477,7 @@ export const shippingQuotes = sqliteTable(
   ],
 );
 
-export const orders = sqliteTable(
+export const orders = pgTable(
   "orders",
   {
     id: text("id").primaryKey(),
@@ -528,7 +529,7 @@ export const orders = sqliteTable(
     totalPaise: integer("total_paise").notNull(),
     currency: text("currency").notNull().default("INR"),
     customerNote: text("customer_note"),
-    placedAt: integer("placed_at").notNull().default(sql`(unixepoch())`),
+    placedAt: integer("placed_at").notNull().default(sql`(extract(epoch from now())::integer)`),
     cancelledAt: integer("cancelled_at"),
     ...timestamps,
   },
@@ -551,7 +552,7 @@ export const orders = sqliteTable(
   ],
 );
 
-export const orderItems = sqliteTable(
+export const orderItems = pgTable(
   "order_items",
   {
     id: text("id").primaryKey(),
@@ -571,7 +572,7 @@ export const orderItems = sqliteTable(
     gstPaise: integer("gst_paise").notNull().default(0),
     lineTotalPaise: integer("line_total_paise").notNull(),
     productSnapshotJson: text("product_snapshot_json").notNull(),
-    createdAt: integer("created_at").notNull().default(sql`(unixepoch())`),
+    createdAt: integer("created_at").notNull().default(sql`(extract(epoch from now())::integer)`),
   },
   (table) => [
     index("order_items_order_idx").on(table.orderId),
@@ -580,7 +581,7 @@ export const orderItems = sqliteTable(
   ],
 );
 
-export const inventoryReservations = sqliteTable(
+export const inventoryReservations = pgTable(
   "inventory_reservations",
   {
     id: text("id").primaryKey(),
@@ -595,8 +596,8 @@ export const inventoryReservations = sqliteTable(
       .notNull()
       .default("active"),
     expiresAt: integer("expires_at").notNull(),
-    createdAt: integer("created_at").notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at").notNull().default(sql`(unixepoch())`),
+    createdAt: integer("created_at").notNull().default(sql`(extract(epoch from now())::integer)`),
+    updatedAt: integer("updated_at").notNull().default(sql`(extract(epoch from now())::integer)`),
   },
   (table) => [
     uniqueIndex("inventory_unique_variant_active")
@@ -607,7 +608,7 @@ export const inventoryReservations = sqliteTable(
   ],
 );
 
-export const payments = sqliteTable(
+export const payments = pgTable(
   "payments",
   {
     id: text("id").primaryKey(),
@@ -653,7 +654,7 @@ export const payments = sqliteTable(
   ],
 );
 
-export const shipments = sqliteTable(
+export const shipments = pgTable(
   "shipments",
   {
     id: text("id").primaryKey(),
@@ -687,7 +688,7 @@ export const shipments = sqliteTable(
   ],
 );
 
-export const taxDocuments = sqliteTable(
+export const taxDocuments = pgTable(
   "tax_documents",
   {
     id: text("id").primaryKey(),
@@ -724,7 +725,7 @@ export const taxDocuments = sqliteTable(
   ],
 );
 
-export const returnCases = sqliteTable(
+export const returnCases = pgTable(
   "return_cases",
   {
     id: text("id").primaryKey(),
@@ -765,7 +766,7 @@ export const returnCases = sqliteTable(
   ],
 );
 
-export const returnItems = sqliteTable(
+export const returnItems = pgTable(
   "return_items",
   {
     returnCaseId: text("return_case_id")
@@ -783,7 +784,7 @@ export const returnItems = sqliteTable(
   ],
 );
 
-export const customCommissions = sqliteTable(
+export const customCommissions = pgTable(
   "custom_commissions",
   {
     id: text("id").primaryKey(),
@@ -832,7 +833,7 @@ export const customCommissions = sqliteTable(
   ],
 );
 
-export const commissionMedia = sqliteTable(
+export const commissionMedia = pgTable(
   "commission_media",
   {
     commissionId: text("commission_id")
@@ -842,12 +843,12 @@ export const commissionMedia = sqliteTable(
       .notNull()
       .references(() => mediaAssets.id, { onDelete: "cascade" }),
     source: text("source", { enum: ["website", "whatsapp", "staff"] }).notNull(),
-    createdAt: integer("created_at").notNull().default(sql`(unixepoch())`),
+    createdAt: integer("created_at").notNull().default(sql`(extract(epoch from now())::integer)`),
   },
   (table) => [primaryKey({ columns: [table.commissionId, table.mediaAssetId] })],
 );
 
-export const commissionMilestones = sqliteTable(
+export const commissionMilestones = pgTable(
   "commission_milestones",
   {
     id: text("id").primaryKey(),
@@ -876,7 +877,7 @@ export const commissionMilestones = sqliteTable(
   ],
 );
 
-export const milestoneMedia = sqliteTable(
+export const milestoneMedia = pgTable(
   "milestone_media",
   {
     milestoneId: text("milestone_id")
@@ -893,7 +894,7 @@ export const milestoneMedia = sqliteTable(
   ],
 );
 
-export const reviews = sqliteTable(
+export const reviews = pgTable(
   "reviews",
   {
     id: text("id").primaryKey(),
@@ -929,7 +930,7 @@ export const reviews = sqliteTable(
   ],
 );
 
-export const notifications = sqliteTable(
+export const notifications = pgTable(
   "notifications",
   {
     id: text("id").primaryKey(),
@@ -948,7 +949,7 @@ export const notifications = sqliteTable(
     providerMessageId: text("provider_message_id"),
     attempts: integer("attempts").notNull().default(0),
     lastError: text("last_error"),
-    scheduledAt: integer("scheduled_at").notNull().default(sql`(unixepoch())`),
+    scheduledAt: integer("scheduled_at").notNull().default(sql`(extract(epoch from now())::integer)`),
     sentAt: integer("sent_at"),
     deliveredAt: integer("delivered_at"),
     ...timestamps,
@@ -960,7 +961,7 @@ export const notifications = sqliteTable(
   ],
 );
 
-export const webhookEvents = sqliteTable(
+export const webhookEvents = pgTable(
   "webhook_events",
   {
     id: text("id").primaryKey(),
@@ -974,8 +975,8 @@ export const webhookEvents = sqliteTable(
     attempts: integer("attempts").notNull().default(0),
     lastError: text("last_error"),
     processedAt: integer("processed_at"),
-    createdAt: integer("created_at").notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at").notNull().default(sql`(unixepoch())`),
+    createdAt: integer("created_at").notNull().default(sql`(extract(epoch from now())::integer)`),
+    updatedAt: integer("updated_at").notNull().default(sql`(extract(epoch from now())::integer)`),
   },
   (table) => [
     uniqueIndex("webhook_events_provider_event_unique").on(
@@ -986,7 +987,7 @@ export const webhookEvents = sqliteTable(
   ],
 );
 
-export const auditLogs = sqliteTable(
+export const auditLogs = pgTable(
   "audit_logs",
   {
     id: text("id").primaryKey(),
@@ -999,7 +1000,7 @@ export const auditLogs = sqliteTable(
     changesJson: text("changes_json"),
     requestId: text("request_id"),
     ipHash: text("ip_hash"),
-    createdAt: integer("created_at").notNull().default(sql`(unixepoch())`),
+    createdAt: integer("created_at").notNull().default(sql`(extract(epoch from now())::integer)`),
   },
   (table) => [
     index("audit_logs_entity_idx").on(table.entityType, table.entityId, table.createdAt),

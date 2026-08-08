@@ -22,7 +22,7 @@ async function database() {
 export async function syncClerkIdentity(profile: ClerkIdentityProfile) {
   const db = await database();
   const userId = localUserId(profile.clerkUserId);
-  const now = sql`(unixepoch())`;
+  const now = sql`(extract(epoch from now())::integer)`;
 
   await db.batch([
     db
@@ -98,7 +98,7 @@ export async function markClerkIdentityDeleted(clerkUserId: string) {
   const db = await database();
   await db
     .update(users)
-    .set({ status: "deleted", updatedAt: sql`(unixepoch())` })
+    .set({ status: "deleted", updatedAt: sql`(extract(epoch from now())::integer)` })
     .where(sql`${users.id} = ${localUserId(clerkUserId)}`);
 }
 

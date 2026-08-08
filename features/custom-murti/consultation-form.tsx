@@ -7,6 +7,7 @@ import { ArrowRight, CheckCircle2, ImagePlus, LockKeyhole, MessageCircle } from 
 import { buttonClassName } from "@/components/ui/button";
 import { FormField, SelectField, TextareaField } from "@/components/ui/form-field";
 import { AccountBootstrap } from "@/features/auth/account-bootstrap";
+import { prepareImageForUpload } from "@/features/uploads/prepare-image";
 import { useAuthConfigured } from "@/features/auth/auth-provider";
 import styles from "@/app/custom-murti/custom-murti.module.css";
 
@@ -51,7 +52,7 @@ function ConnectedConsultationForm() {
       const files = form.getAll("references").filter((item): item is File => item instanceof File && item.size > 0).slice(0, 5);
       for (const file of files) {
         const upload = new FormData();
-        upload.set("file", file);
+        upload.set("file", await prepareImageForUpload(file));
         const mediaResponse = await fetch(`/api/v1/commissions/${encodeURIComponent(payload.data.commissionNumber)}/media`, {
           method: "POST",
           headers: token ? { authorization: `Bearer ${token}` } : undefined,
@@ -85,7 +86,7 @@ function ConnectedConsultationForm() {
         <SelectField label="Preferred timeline" name="timeline" defaultValue="Flexible"><option>Flexible</option><option>Within 1–2 months</option><option>Within 3–6 months</option><option>For a specific ceremony or date</option></SelectField>
         <TextareaField className={styles.fullField} label="Describe the posture, expression or details" name="notes" placeholder="Share the style, ornamentation, base, accompanying figures or other preferences." />
       </div>
-      <label className={styles.referenceUpload}><ImagePlus aria-hidden="true" size={20} /><span><strong>Add reference photos</strong><small>Up to 5 JPEG, PNG or WebP images, 12 MB each.</small></span><input type="file" name="references" accept="image/jpeg,image/png,image/webp" multiple /></label>
+      <label className={styles.referenceUpload}><ImagePlus aria-hidden="true" size={20} /><span><strong>Add reference photos</strong><small>Up to 5 JPEG, PNG or WebP images, 12 MB each. Large photos are optimized before upload.</small></span><input type="file" name="references" accept="image/jpeg,image/png,image/webp" multiple /></label>
       {error ? <p className={styles.formError}>{error}</p> : null}
       {configured && isSignedIn ? <button className={buttonClassName({ size: "lg", className: styles.formSubmit })} type="submit" disabled={submitting}>{submitting ? "Saving securely…" : <>Submit commission request <ArrowRight aria-hidden="true" size={18} /></>}</button> : configured ? <Link className={buttonClassName({ size: "lg", className: styles.formSubmit })} href="/sign-in?redirect_url=/custom-murti#consultation">Sign in to begin <ArrowRight aria-hidden="true" size={18} /></Link> : <a className={buttonClassName({ size: "lg", className: styles.formSubmit })} href="https://wa.me/916376871065?text=Namaste%2C%20I%20would%20like%20to%20discuss%20a%20custom%20murti." target="_blank" rel="noreferrer">Continue on WhatsApp <ArrowRight aria-hidden="true" size={18} /></a>}
       <p className={styles.formPrivacy}><LockKeyhole aria-hidden="true" size={14} /> Requests and reference images are private to your account and authorised gallery staff.</p>

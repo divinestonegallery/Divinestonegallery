@@ -26,7 +26,7 @@ The privacy notice and website terms now describe the implemented service, but t
 
 - Add live Clerk, Razorpay, Shiprocket, Resend, MSG91 and Meta credentials only through hosted secrets.
 - Verify webhook signatures using the live provider dashboards and rotate every test secret before launch.
-- Configure Cloudflare rate limits for authentication, checkout, shipping quotes, uploads and provider webhooks.
+- Configure hosting-platform rate limits for authentication, checkout, shipping quotes, uploads and provider webhooks.
 - Configure monitoring, error alerts, database backups and a tested restore procedure.
 - Configure the notification worker schedule only after message templates and consent controls are approved.
 

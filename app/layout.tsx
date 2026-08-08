@@ -1,20 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { getClerkPublishableKey } from "@/auth/config";
 import { JsonLd } from "@/components/site/json-ld";
 import { getSiteUrl } from "@/config/site";
 import { GalleryAuthProvider } from "@/features/auth/auth-provider";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export function generateMetadata(): Metadata {
   const metadataBase = new URL(getSiteUrl());
@@ -82,9 +71,7 @@ export default function RootLayout({
         } as React.CSSProperties
       }
     >
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="antialiased">
         <a className="skip-link" href="#main-content">Skip to main content</a>
         <GalleryAuthProvider publishableKey={clerkPublishableKey}>
           <JsonLd data={organizationSchema} />

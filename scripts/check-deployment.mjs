@@ -37,9 +37,10 @@ for (const key of [
   "SHIPROCKET_PICKUP_POSTCODE", "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET",
   "RESEND_API_KEY", "RESEND_FROM_EMAIL", "RESEND_REPLY_TO", "MSG91_AUTH_KEY", "MSG91_SENDER_ID",
   "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_GRAPH_API_VERSION",
+  "DATABASE_URL", "S3_BUCKET", "S3_REGION", "DEPLOYMENT_TARGET",
 ]) required(key);
 
-required("NOTIFICATION_WORKER_SECRET", 32);
+required(value("DEPLOYMENT_TARGET") === "vercel" ? "CRON_SECRET" : "NOTIFICATION_WORKER_SECRET", 32);
 required("BUSINESS_LEGAL_NAME", 2);
 required("BUSINESS_ADDRESS", 12);
 required("CUSTOMER_CARE_HOURS", 3);
@@ -53,6 +54,27 @@ try {
 
 if (!value("SHIPROCKET_API_TOKEN") && !(value("SHIPROCKET_API_EMAIL") && value("SHIPROCKET_API_PASSWORD"))) {
   failures.push("Configure either SHIPROCKET_API_TOKEN or the Shiprocket API email and password");
+}
+
+try {
+  const databaseUrl = new URL(value("DATABASE_URL"));
+  if (!['postgres:', 'postgresql:'].includes(databaseUrl.protocol)) throw new Error();
+} catch {
+  failures.push("DATABASE_URL must be a valid PostgreSQL connection URL");
+}
+
+if (value("DEPLOYMENT_TARGET") && !["vercel", "aws"].includes(value("DEPLOYMENT_TARGET"))) {
+  failures.push("DEPLOYMENT_TARGET must be vercel or aws");
+}
+const hasS3Credentials = Boolean(value("S3_ACCESS_KEY_ID") && value("S3_SECRET_ACCESS_KEY"));
+if (!hasS3Credentials && !(value("DEPLOYMENT_TARGET") === "aws" && value("S3_USE_IAM_ROLE") === "true")) {
+  failures.push("Configure S3 credentials, or set S3_USE_IAM_ROLE=true for an AWS IAM role");
+}
+if (value("S3_ENDPOINT")) {
+  try { new URL(value("S3_ENDPOINT")); } catch { failures.push("S3_ENDPOINT must be a valid URL when provided"); }
+}
+if (value("S3_SERVER_SIDE_ENCRYPTION") && !["AES256", "aws:kms"].includes(value("S3_SERVER_SIDE_ENCRYPTION"))) {
+  failures.push("S3_SERVER_SIDE_ENCRYPTION must be AES256 or aws:kms");
 }
 if (value("BUSINESS_GSTIN") && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(value("BUSINESS_GSTIN").toUpperCase())) failures.push("BUSINESS_GSTIN is not structurally valid");
 if (value("BUSINESS_PHONE_E164") && !/^\+[1-9]\d{7,14}$/.test(value("BUSINESS_PHONE_E164"))) failures.push("BUSINESS_PHONE_E164 must use international +country-code format");
@@ -76,13 +98,18 @@ for (const [key, maximum] of [["READY_MADE_RETURN_WINDOW_DAYS", 30], ["DAMAGE_RE
 templateMap("MSG91_SMS_TEMPLATE_MAP_JSON");
 templateMap("WHATSAPP_TEMPLATE_MAP_JSON");
 
-try {
-  const hosting = JSON.parse(readFileSync(".openai/hosting.json", "utf8"));
-  if (!hosting.project_id || hosting.d1 !== "DB" || hosting.r2 !== "MEDIA") throw new Error();
-} catch {
-  failures.push(".openai/hosting.json must declare the project, DB and MEDIA bindings");
-}
 if (!existsSync("drizzle/meta/_journal.json")) failures.push("Database migration journal is missing");
+else {
+  try {
+    const journal = JSON.parse(readFileSync("drizzle/meta/_journal.json", "utf8"));
+    if (journal.dialect !== "postgresql" || !journal.entries?.length) throw new Error();
+  } catch {
+    failures.push("Database migration journal must contain PostgreSQL migrations");
+  }
+}
+if (!existsSync("next.config.ts")) failures.push("Standard Next.js configuration is missing");
+if (value("DEPLOYMENT_TARGET") === "vercel" && !existsSync("vercel.json")) failures.push("Vercel configuration is missing");
+if (value("DEPLOYMENT_TARGET") === "aws" && !existsSync("Dockerfile")) failures.push("AWS-compatible Dockerfile is missing");
 
 if (failures.length) {
   console.error("Deployment readiness check failed:\n");

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request, { params }: { params: Promise<{ id: string; milestoneId: string }> }) {
   const authorization = await authorizeStaff(request);
   if (!authorization.authorized) return Response.json({ error: { code: "STAFF_REQUIRED", message: "Staff access is required." } }, { status: authorization.status });
-  if (declaredBodyExceeds(request, 73 * 1024 * 1024)) return Response.json({ error: { code: "UPLOAD_TOO_LARGE", message: "Milestone upload is too large." } }, { status: 413 });
+  if (declaredBodyExceeds(request, 4_200_000)) return Response.json({ error: { code: "UPLOAD_TOO_LARGE", message: "Milestone upload is too large." } }, { status: 413 });
   const { id, milestoneId } = await params;
   let form: FormData;
   try { form = await request.formData(); } catch { return Response.json({ error: { code: "INVALID_SUBMISSION", message: "Valid milestone details are required." } }, { status: 400 }); }
@@ -27,6 +27,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return Response.json({ data: item });
   } catch {
     await Promise.all(stored.map((item) => item.remove()));
-    return Response.json({ error: { code: "MILESTONE_NOT_SUBMITTED", message: "Use 1–6 valid JPEG, PNG or WebP images up to 12 MB each." } }, { status: 503 });
+    return Response.json({ error: { code: "MILESTONE_NOT_SUBMITTED", message: "Use 1–6 valid optimized JPEG, PNG or WebP images." } }, { status: 503 });
   }
 }

@@ -2,15 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 async function render(pathname = "/", init = {}) {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${pathname}`);
-  const { default: worker } = await import(workerUrl.href);
-
-  return worker.fetch(
-    new Request(`http://localhost${pathname}`, { ...init, headers: { accept: "text/html", ...init.headers } }),
-    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
-    { waitUntil() {}, passThroughOnException() {} },
-  );
+  const baseUrl = process.env.TEST_BASE_URL;
+  if (!baseUrl) throw new Error("TEST_BASE_URL is required for rendered route tests");
+  return fetch(`${baseUrl}${pathname}`, {
+    ...init,
+    redirect: "manual",
+    headers: { accept: "text/html", ...init.headers },
+  });
 }
 
 test("server-renders the Divine Stone Gallery homepage", async () => {

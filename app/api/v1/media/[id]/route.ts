@@ -9,7 +9,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   const db = getDb();
   const [media] = await db
-    .select({ r2Key: mediaAssets.r2Key, contentType: mediaAssets.contentType })
+    .select({ storageKey: mediaAssets.storageKey, contentType: mediaAssets.contentType })
     .from(mediaAssets)
     .innerJoin(productMedia, eq(productMedia.mediaAssetId, mediaAssets.id))
     .innerJoin(products, eq(productMedia.productId, products.id))
@@ -17,7 +17,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     .limit(1);
 
   if (!media) return new Response("Not found", { status: 404 });
-  const object = await getMediaBucket().get(media.r2Key);
+  const object = await getMediaBucket().get(media.storageKey);
   if (!object) return new Response("Not found", { status: 404 });
 
   const headers = new Headers();

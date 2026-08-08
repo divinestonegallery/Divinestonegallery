@@ -1,68 +1,19 @@
 {
   "version": "7",
-  "dialect": "sqlite",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1786209656965,
-      "tag": "0000_complex_aaron_stack",
+      "version": "7",
+      "when": 1786222325795,
+      "tag": "0000_postgresql_initial",
       "breakpoints": true
     },
     {
       "idx": 1,
-      "version": "6",
-      "when": 1786212092394,
-      "tag": "0001_outstanding_maestro",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1786212139814,
-      "tag": "0002_outgoing_night_nurse",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1786212140274,
-      "tag": "0003_seed_catalog",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1786214449606,
-      "tag": "0004_quiet_johnny_blaze",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1786215489388,
-      "tag": "0005_youthful_the_stranger",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1786215545524,
-      "tag": "0006_chubby_loners",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1786216641581,
-      "tag": "0007_happy_warhawk",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "6",
-      "when": 1786220029179,
-      "tag": "0008_glorious_radioactive_man",
+      "version": "7",
+      "when": 1786222371178,
+      "tag": "0001_seed_catalog",
       "breakpoints": true
     }
   ]

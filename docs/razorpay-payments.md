@@ -20,7 +20,7 @@ Subscribe to `payment.authorized`, `payment.captured`, `payment.failed`, and `or
 
 1. The server revalidates stock, GST, automatic shipping and the final total.
 2. It creates a Razorpay Order for the exact total in integer paise.
-3. The gallery order, item snapshots, stock changes, shipment selection and provider order reference are committed together in D1.
+3. The gallery order, item snapshots, stock changes, shipment selection and provider order reference are committed together in PostgreSQL.
 4. The browser opens Razorpay Checkout using only the public Key ID and the provider order reference.
 5. The authenticated confirmation endpoint verifies the HMAC signature using the server-stored provider order reference, fetches the payment directly from Razorpay, and checks order ID, amount, currency and capture status.
 6. Signed webhooks provide the asynchronous source of truth. The raw body is verified before JSON parsing, and `x-razorpay-event-id` prevents duplicate processing.

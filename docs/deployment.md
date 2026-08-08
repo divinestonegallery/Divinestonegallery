@@ -1,65 +1,52 @@
 # Deployment runbook
 
-This project deploys the storefront, customer area, staff area and `/api/v1` backend as one Cloudflare Sites application. Do not deploy the frontend and backend separately.
+The storefront, account area, staff console and `/api/v1` backend deploy together as one standard Next.js application. The same GitHub repository can target Vercel or AWS.
 
-## 1. Prepare environments
+## Shared infrastructure
 
-Use three isolated environments where possible:
+Create isolated local, staging and production resources:
 
-- local: `.env.local`, local D1 simulation and provider test credentials;
-- staging: separate D1/R2 resources and provider test modes;
-- production: production D1/R2 resources and live provider credentials.
+- PostgreSQL database with a pooled `DATABASE_URL` for serverless deployments;
+- private S3-compatible bucket for uploaded product and commission media;
+- separate test/live credentials for Clerk, Razorpay, Shiprocket and messaging providers.
 
-Copy `.env.example` to `.env.local` for local release validation. Fill the legal business identity, final return/damage windows, provider credentials, approved template identifiers and a random notification-worker secret of at least 32 characters. `.env.local` is ignored by Git and must never be committed.
+Copy `.env.example` to `.env.local`. Never commit `.env.local` or production secrets. On AWS, prefer an IAM role and set `S3_USE_IAM_ROLE=true`; on Vercel, provide restricted S3 credentials through encrypted project environment variables.
 
-Store production secrets in the hosting environment, not in source code. Only public configuration, such as the Clerk publishable key and public site origin, may use `NEXT_PUBLIC_` variables.
-
-## 2. Configure hosted resources
-
-The hosting manifest must provide:
-
-- D1 database binding: `DB`
-- R2 bucket binding: `MEDIA`
-
-Apply every reviewed SQL migration in `drizzle/` to the target D1 database in journal order before serving the new application build. The Sites packaging workflow includes this directory with the deployment archive. Back up production data before later schema changes and document a restore test.
-
-## 3. Configure provider callbacks
-
-Use `https://divinestonegallery.com` as the final origin and configure:
-
-- Clerk webhook: `https://divinestonegallery.com/api/v1/webhooks/clerk`
-- Razorpay webhook: `https://divinestonegallery.com/api/v1/webhooks/payments/razorpay`
-- Notification worker: authenticated `POST https://divinestonegallery.com/api/v1/internal/notifications/process`
-
-The notification endpoint is not a public webhook. Invoke it from a scheduled job using `Authorization: Bearer <NOTIFICATION_WORKER_SECRET>`.
-
-Verify the Resend sending domain, create the required MSG91 DLT flows, and obtain approved Meta utility-template identifiers for every name present in both template-map variables. WhatsApp messages are queued only for customers with a verified phone and recorded transactional opt-in.
-
-## 4. Run the fail-closed checks
+Apply migrations before routing production traffic:
 
 ```bash
 npm ci
-npm run deploy:check
+npm run db:migrate
 npm run release:verify
 ```
 
-The first command installs the locked dependency set. The readiness check validates configuration shape without printing secret values. The release command repeats that gate, builds the production bundle, runs all automated tests and runs lint. Any failure stops the release.
+## Vercel
 
-## 5. Connect the domain
+1. Import the private GitHub repository into Vercel.
+2. Connect a managed PostgreSQL database and add its pooled `DATABASE_URL`.
+3. Add the private S3 bucket variables from `.env.example`.
+4. Add `CRON_SECRET` with at least 32 random characters. `vercel.json` invokes the protected notification worker every five minutes.
+5. Add all business and provider environment variables to Preview and Production separately.
+6. Deploy a preview, run the smoke tests, then promote the validated build.
 
-Attach `divinestonegallery.com` to the production project, set the DNS records requested by the host, and require HTTPS. Confirm that canonical URLs, `robots.txt` and `sitemap.xml` use the final domain. Keep any staging hostname out of search indexes.
+## AWS
 
-## 6. Production smoke test
+1. Build the included `Dockerfile`, publish the image to Amazon ECR and run it through ECS/Fargate, App Runner or another AWS container service.
+2. Use PostgreSQL through RDS/Aurora or another reachable PostgreSQL provider. Use connection pooling or RDS Proxy for serverless traffic.
+3. Attach an IAM role limited to the application’s private S3 bucket, or set restricted S3 credentials.
+4. Schedule an EventBridge API Destination to call `GET /api/v1/internal/notifications/process` with `Authorization: Bearer <NOTIFICATION_WORKER_SECRET>` every five minutes.
+5. Store all secrets in AWS Secrets Manager or the selected container service and expose only the required runtime variables.
 
-Before public traffic, use internal recipients and a low-value controlled catalogue item to verify:
+## Provider callbacks
 
-1. account creation and phone/email verification;
-2. wishlist, cart and automatic shipping quote;
-3. Razorpay test/live transition, bank transfer and staff-approved COD;
-4. inventory reservation and duplicate-checkout protection;
-5. custom commission quote, advance, milestone and customer approval;
-6. email and SMS delivery, plus WhatsApp opt-in, delivery and withdrawal;
-7. staff access, notification retries, order history and private media access;
-8. mobile checkout, keyboard navigation and customer support links.
+After connecting `https://divinestonegallery.com`, configure:
 
-Complete every business, compliance, monitoring and recovery item in [launch-readiness.md](launch-readiness.md) before making the site public.
+- Clerk: `https://divinestonegallery.com/api/v1/webhooks/clerk`
+- Razorpay: `https://divinestonegallery.com/api/v1/webhooks/payments/razorpay`
+- Notification worker: authenticated `GET` or `POST https://divinestonegallery.com/api/v1/internal/notifications/process`
+
+Verify the Resend domain, MSG91 DLT flows and Meta utility templates before enabling delivery. WhatsApp is queued only for a verified phone with recorded transactional opt-in.
+
+## Production smoke test
+
+Before public traffic, verify account creation, wishlist/cart migration, automatic Shiprocket rates, Razorpay, bank transfer, staff-approved COD, stock idempotency, custom commissions, private media, all notification channels, mobile checkout and keyboard navigation. Complete [launch-readiness.md](launch-readiness.md) before opening public access.

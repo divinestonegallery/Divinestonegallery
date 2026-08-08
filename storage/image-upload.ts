@@ -1,4 +1,4 @@
-const maxProductImageBytes = 12 * 1024 * 1024;
+const maxProductImageBytes = 4 * 1024 * 1024;
 
 type ValidatedImage = {
   bytes: ArrayBuffer;

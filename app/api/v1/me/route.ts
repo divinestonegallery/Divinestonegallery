@@ -114,7 +114,7 @@ export async function PATCH(request: Request) {
     const now = Math.floor(Date.now() / 1000);
     const action = body.whatsappTransactionalUpdates ? "granted" as const : "withdrawn" as const;
     await db.batch([
-      db.update(users).set({ whatsappTransactionalOptInAt: action === "granted" ? now : null, updatedAt: sql`(unixepoch())` }).where(eq(users.id, authorization.userId)),
+      db.update(users).set({ whatsappTransactionalOptInAt: action === "granted" ? now : null, updatedAt: sql`(extract(epoch from now())::integer)` }).where(eq(users.id, authorization.userId)),
       db.insert(communicationConsentEvents).values({
         id: `consent:${crypto.randomUUID()}`,
         userId: authorization.userId,

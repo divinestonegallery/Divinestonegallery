@@ -65,7 +65,7 @@ export async function POST(request: Request) {
         payloadSha256: await sha256(body),
         status: "processed",
         attempts: 1,
-        processedAt: sql`(unixepoch())`,
+        processedAt: sql`(extract(epoch from now())::integer)`,
       })
       .onConflictDoNothing({
         target: [webhookEvents.provider, webhookEvents.providerEventId],

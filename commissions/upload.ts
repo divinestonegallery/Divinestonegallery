@@ -7,19 +7,19 @@ export async function storeCommissionImage(file: File, folder: string, altText: 
   if (!image) return null;
   const id = `media:${crypto.randomUUID()}`;
   const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, "_");
-  const r2Key = `commissions/${safeFolder}/${crypto.randomUUID()}.${image.extension}`;
-  await getMediaBucket().put(r2Key, image.bytes, {
+  const storageKey = `commissions/${safeFolder}/${crypto.randomUUID()}.${image.extension}`;
+  await getMediaBucket().put(storageKey, image.bytes, {
     httpMetadata: { contentType: image.contentType, cacheControl: "private, max-age=3600" },
     customMetadata: { mediaId: id },
   });
   const asset: CommissionAsset = {
     id,
-    r2Key,
+    storageKey,
     originalFilename: file.name.slice(0, 255) || `reference.${image.extension}`,
     contentType: image.contentType,
     byteSize: file.size,
     checksumSha256: image.checksumSha256,
     altText,
   };
-  return { asset, remove: () => getMediaBucket().delete(r2Key) };
+  return { asset, remove: () => getMediaBucket().delete(storageKey) };
 }

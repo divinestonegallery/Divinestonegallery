@@ -5,7 +5,7 @@ Step 9 implements the private commission journey for customers and full-access g
 ## Customer flow
 
 1. A signed-in customer submits the deity, approximate height, placement, finish, timeline, delivery postcode and written requirements from `/custom-murti`.
-2. Up to five reference JPEG, PNG or WebP images can be stored privately in R2. D1 stores their ownership and metadata.
+2. Up to five reference JPEG, PNG or WebP images can be stored privately in S3-compatible storage. PostgreSQL stores their ownership and metadata.
 3. The request appears at `/account/commissions` and receives a permanent `DSG-C-...` reference.
 4. The customer can see the gallery quotation, separately decided advance, balance, expected completion date and every production milestone.
 5. A submitted milestone can be approved or returned with a required change note. Both decisions are authenticated and audited.
@@ -28,6 +28,6 @@ Submitting a milestone queues email, SMS and WhatsApp notifications for every ve
 - Staff endpoints require an active `staff_members` row.
 - Private media is served only after customer ownership or staff access is checked.
 - Image signatures are inspected; the filename and browser MIME type are not trusted.
-- R2 objects are removed if their D1 metadata transaction fails.
+- S3-compatible storage objects are removed if their PostgreSQL metadata transaction fails.
 - Financial values use integer paise and the server calculates the balance.
 - Milestones can be decided only while in `submitted` state, preventing duplicate approvals.

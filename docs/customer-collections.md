@@ -24,6 +24,6 @@ The browser clears local lists only after a successful response. A failed or int
 
 ## Signed-in behavior
 
-Once migration succeeds, D1 becomes authoritative. Add, remove and clear actions use protected `/api/v1/me/wishlist` and `/api/v1/me/cart` routes. The interface updates optimistically, then reconciles with the server response; failures trigger a fresh account read. Returning to a visible browser tab also refreshes both collections, allowing changes made on another signed-in device to appear.
+Once migration succeeds, PostgreSQL becomes authoritative. Add, remove and clear actions use protected `/api/v1/me/wishlist` and `/api/v1/me/cart` routes. The interface updates optimistically, then reconciles with the server response; failures trigger a fresh account read. Returning to a visible browser tab also refreshes both collections, allowing changes made on another signed-in device to appear.
 
 The enquiry bag does not reserve inventory and does not create an order. It records quote intent only. Availability, price, GST, packing and shipping must be revalidated in the later checkout or quotation workflow.

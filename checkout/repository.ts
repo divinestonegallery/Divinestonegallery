@@ -472,7 +472,7 @@ export async function placeOrder(
     .update(productVariants)
     .set({
       stockQuantity: sql`${productVariants.stockQuantity} - ${item.quantity}`,
-      updatedAt: sql`(unixepoch())`,
+      updatedAt: sql`(extract(epoch from now())::integer)`,
     })
     .where(eq(productVariants.id, item.variantId)));
   const recipients = [
@@ -493,7 +493,7 @@ export async function placeOrder(
     ...orderItemInserts,
     ...reservationInserts,
     ...stockUpdates,
-    db.update(shippingQuotes).set({ status: "consumed", updatedAt: sql`(unixepoch())` }).where(eq(shippingQuotes.id, shippingQuote.id)),
+    db.update(shippingQuotes).set({ status: "consumed", updatedAt: sql`(extract(epoch from now())::integer)` }).where(eq(shippingQuotes.id, shippingQuote.id)),
     db.insert(payments).values({
       id: paymentId,
       orderId,

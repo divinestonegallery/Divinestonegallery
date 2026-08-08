@@ -8,7 +8,7 @@ export function AdminState({ reason }: { reason: "auth-unconfigured" | "forbidde
     ? { icon: KeyRound, title: "Activate Clerk to open staff administration.", body: "The product-management system is ready. Add the Clerk keys and sign in with divinestonegallery@gmail.com to become the initial full-access administrator." }
     : reason === "forbidden"
       ? { icon: ShieldAlert, title: "This account does not have staff access.", body: "Sign in with the owner email or ask an existing administrator to activate this staff account." }
-      : { icon: ShieldAlert, title: "The catalogue database is not ready yet.", body: "Apply the included D1 migrations, then reload this page." };
+      : { icon: ShieldAlert, title: "The catalogue database is not ready yet.", body: "Apply the included PostgreSQL migrations, then reload this page." };
   const Icon = content.icon;
 
   return (

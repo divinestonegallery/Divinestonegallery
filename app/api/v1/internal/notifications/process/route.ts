@@ -18,3 +18,5 @@ export async function POST(request: Request) {
   try { return Response.json({ data: await processNotificationQueue(30) }); }
   catch { return Response.json({ error: { code: "NOTIFICATION_RUN_FAILED", message: "The notification queue could not be processed." } }, { status: 503 }); }
 }
+
+export const GET = POST;
