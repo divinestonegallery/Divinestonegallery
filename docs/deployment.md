@@ -25,7 +25,7 @@ npm run release:verify
 1. Import the private GitHub repository into Vercel.
 2. Connect a managed PostgreSQL database and add its pooled `DATABASE_URL`.
 3. Add the private S3 bucket variables from `.env.example`.
-4. Add `CRON_SECRET` with at least 32 random characters. `vercel.json` invokes the protected notification worker every five minutes.
+4. Add `CRON_SECRET` with at least 32 random characters. On Vercel Hobby, `vercel.json` invokes the protected notification worker once daily at 03:00 UTC (08:30 IST). Staff can process the queue immediately from `/admin/notifications`. On Vercel Pro, change the schedule to `*/5 * * * *` for automatic five-minute delivery attempts.
 5. Add all business and provider environment variables to Preview and Production separately.
 6. Deploy a preview, run the smoke tests, then promote the validated build.
 
