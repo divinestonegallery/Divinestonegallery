@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getClerkPublishableKey } from "@/auth/config";
+import { JsonLd } from "@/components/site/json-ld";
+import { getSiteUrl } from "@/config/site";
+import { GalleryAuthProvider } from "@/features/auth/auth-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,11 +16,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  const metadataBase = new URL(`${protocol}://${host}`);
+export function generateMetadata(): Metadata {
+  const metadataBase = new URL(getSiteUrl());
   const description = "Authentic hand-carved marble moorties by fourth-generation master moortikars from Alwar, Rajasthan.";
 
   return {
@@ -53,6 +53,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const siteUrl = getSiteUrl();
+  const clerkPublishableKey = getClerkPublishableKey();
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Divine Stone Gallery",
+    url: siteUrl,
+    logo: `${siteUrl}/brand/lotus-mark.jpg`,
+    foundingDate: "1960",
+    description: "Fourth-generation family atelier creating hand-carved marble murtis in Alwar, Rajasthan.",
+    areaServed: "IN",
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: "+91-63768-71065",
+      contactType: "customer service",
+      availableLanguage: ["English", "Hindi"],
+    },
+  };
+
   return (
     <html
       lang="en"
@@ -66,7 +85,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <a className="skip-link" href="#main-content">Skip to main content</a>
+        <GalleryAuthProvider publishableKey={clerkPublishableKey}>
+          <JsonLd data={organizationSchema} />
+          {children}
+        </GalleryAuthProvider>
       </body>
     </html>
   );

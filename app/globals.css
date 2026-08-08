@@ -101,3 +101,31 @@ video {
   width: min(100% - (var(--page-gutter) * 2), var(--container-width));
   margin-inline: auto;
 }
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 200;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-sm);
+  color: white;
+  background: var(--foreground);
+  font-weight: 650;
+  transform: translateY(-160%);
+  transition: transform var(--transition-fast);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .skip-link {
+    transition: none;
+  }
+}

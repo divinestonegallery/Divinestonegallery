@@ -22,9 +22,9 @@ import { brand } from "@/config/brand";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
-  title: "Divine Stone Gallery | Hand-Carved Marble Moorties",
   description:
     "Discover authentic hand-carved marble moorties by fourth-generation master moortikars from Alwar, Rajasthan.",
+  alternates: { canonical: "/" },
 };
 
 const deityCollections = [
@@ -32,37 +32,37 @@ const deityCollections = [
     name: "Radha Krishna",
     note: "Grace in eternal union",
     image: "/catalog/radha-krishna-39.jpg",
-    href: "/shop/deity/radha-krishna",
+    href: "/shop?q=Radha%20Krishna",
   },
   {
     name: "Ganesha",
     note: "The auspicious beginning",
     image: "/catalog/ganesh-24.jpg",
-    href: "/shop/deity/ganesha",
+    href: "/shop?q=Ganesha",
   },
   {
     name: "Shiva Parivar",
     note: "Harmony, strength and devotion",
     image: "/catalog/gauri-shankar-18.jpg",
-    href: "/shop/deity/shiva",
+    href: "/shop?q=Shiva",
   },
   {
     name: "Lakshmi",
     note: "Prosperity with sacred beauty",
     image: "/catalog/lakshmi-24.jpg",
-    href: "/shop/deity/lakshmi",
+    href: "/shop?q=Lakshmi",
   },
   {
     name: "Saraswati",
     note: "Wisdom rendered in marble",
     image: "/catalog/saraswati-18.jpg",
-    href: "/shop/deity/saraswati",
+    href: "/shop?q=Saraswati",
   },
   {
     name: "Ram Darbar",
     note: "The ideal divine family",
     image: "/catalog/ram-darbar-24.jpg",
-    href: "/shop/deity/ram-darbar",
+    href: "/shop?q=Ram%20Darbar",
   },
 ] as const;
 
@@ -114,15 +114,15 @@ const commissionSteps = [
 export default function Home() {
   return (
     <ToastProvider>
-      <SiteHeader />
-      <main>
+      <SiteHeader animateLogo />
+      <main id="main-content" tabIndex={-1}>
         <section className={styles.hero}>
           <div className={`${styles.heroInner} site-container`}>
             <div className={styles.heroCopy}>
               <p className={styles.eyebrow}>From Alwar, Rajasthan · Since 1960</p>
               <h1 className="font-display">
                 Sacred forms,
-                <span>carved for generations.</span>
+                {" "}<span>carved for generations.</span>
               </h1>
               <p className={styles.heroLead}>
                 Authentic hand-carved marble moorties shaped by fourth-generation master moortikars and guided by the principles of Shilp Shastra.
@@ -311,7 +311,7 @@ export default function Home() {
         </section>
       </main>
       <SiteFooter />
-      <WhatsAppAssistance />
+      <WhatsAppAssistance elevated />
       <CookieConsent />
     </ToastProvider>
   );

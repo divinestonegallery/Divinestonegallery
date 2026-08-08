@@ -1,21 +1,12 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
-import { ArrowRight, Camera, Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { brand } from "@/config/brand";
+import { getPublicBusinessDetails } from "@/config/business";
 import styles from "./site-shell.module.css";
 
 export function SiteFooter() {
-  const [subscribed, setSubscribed] = useState(false);
-
-  function handleNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubscribed(true);
-    event.currentTarget.reset();
-  }
-
+  const business = getPublicBusinessDetails();
   return (
     <footer className={styles.siteFooter}>
       <section className={styles.newsletterSection} aria-labelledby="newsletter-title">
@@ -24,20 +15,14 @@ export function SiteFooter() {
             <p>From our atelier to your mandir</p>
             <h2 className="font-display" id="newsletter-title">Stories of craft, devotion and new creations.</h2>
           </div>
-          {subscribed ? (
-            <p className={styles.newsletterSuccess} role="status">
-              Thank you. You are on the Divine Stone Gallery list.
-            </p>
-          ) : (
-            <form className={styles.newsletterForm} onSubmit={handleNewsletterSubmit}>
-              <label className="sr-only" htmlFor="newsletter-email">Email address</label>
-              <Mail aria-hidden="true" size={19} strokeWidth={1.5} />
-              <input id="newsletter-email" name="email" type="email" placeholder="Your email address" required />
-              <button type="submit" aria-label="Join newsletter">
-                Join <ArrowRight aria-hidden="true" size={18} />
-              </button>
-            </form>
-          )}
+          <a
+            className={styles.newsletterCta}
+            href="https://wa.me/916376871065?text=Namaste%2C%20please%20share%20updates%20about%20new%20Divine%20Stone%20Gallery%20creations."
+            target="_blank"
+            rel="noreferrer"
+          >
+            <MessageCircle aria-hidden="true" size={19} /> Ask for collection updates
+          </a>
         </div>
       </section>
 
@@ -46,19 +31,20 @@ export function SiteFooter() {
           <Image src="/brand/logo-horizontal.jpg" alt="Divine Stone Gallery" width={420} height={225} />
           <p>{brand.promise}, shaped by generations of experience and guided by sacred tradition.</p>
           <div className={styles.footerContact}>
-            <span><MapPin aria-hidden="true" size={17} /> {brand.location}</span>
+            <span><MapPin aria-hidden="true" size={17} /> {business.address || brand.location}</span>
             <a href="tel:+916376871065"><Phone aria-hidden="true" size={17} /> {brand.phone}</a>
-            <a href="mailto:hello@divinestonegallery.com"><Mail aria-hidden="true" size={17} /> Email our gallery</a>
+            <Link href="/contact"><Mail aria-hidden="true" size={17} /> Contact our gallery</Link>
+            {business.gstin ? <span>GSTIN: {business.gstin}</span> : null}
           </div>
         </div>
 
         <div className={styles.footerColumn}>
           <p>Explore</p>
           <Link href="/shop">All moorties</Link>
-          <Link href="/shop/ready-to-ship">Ready to ship</Link>
+          <Link href="/shop">Available collection</Link>
           <Link href="/custom-murti">Custom murti</Link>
           <Link href="/artisans">Our artisans</Link>
-          <Link href="/shop/new-arrivals">New arrivals</Link>
+          <Link href="/shop">Featured works</Link>
         </div>
 
         <div className={styles.footerColumn}>
@@ -73,9 +59,9 @@ export function SiteFooter() {
         <div className={styles.footerColumn}>
           <p>Assistance</p>
           <Link href="/contact">Contact us</Link>
-          <Link href="/track-order">Track order</Link>
+          <Link href="/track-order">Track or discuss an order</Link>
           <Link href="/shipping">Shipping & delivery</Link>
-          <Link href="/damage-protection">Damage protection</Link>
+          <Link href="/shipping#damage-protection">Damage guidance</Link>
           <Link href="/faq">Frequently asked questions</Link>
         </div>
       </div>
@@ -87,9 +73,7 @@ export function SiteFooter() {
           <Link href="/terms">Terms</Link>
           <Link href="/returns">Returns</Link>
         </div>
-        <a href="https://www.instagram.com/" target="_blank" rel="noreferrer" aria-label="Instagram">
-          <Camera aria-hidden="true" size={18} /> Instagram
-        </a>
+        <Link href="/contact">Gallery assistance</Link>
       </div>
     </footer>
   );

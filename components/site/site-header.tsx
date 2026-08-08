@@ -2,43 +2,45 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   CircleUserRound,
   Heart,
   Home,
   Menu,
+  MessageCircle,
   Search,
   ShoppingBag,
   Sparkles,
   X,
 } from "lucide-react";
-import { FormEvent, useEffect, useId, useState } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
+import { AccountControl } from "@/features/auth/account-control";
+import { useEnquiryBag, useSavedWorks } from "@/features/customer/device-collections";
 import styles from "./site-shell.module.css";
 
 const deityLinks = [
-  ["Ganesha", "/shop/deity/ganesha"],
-  ["Radha Krishna", "/shop/deity/radha-krishna"],
-  ["Shiva", "/shop/deity/shiva"],
-  ["Hanuman", "/shop/deity/hanuman"],
-  ["Durga", "/shop/deity/durga"],
-  ["View all deities", "/shop/deity"],
+  ["Ganesha", "/shop?q=Ganesha"],
+  ["Radha Krishna", "/shop?q=Radha%20Krishna"],
+  ["Shiva", "/shop?q=Shiva"],
+  ["Lakshmi", "/shop?q=Lakshmi"],
+  ["Saraswati", "/shop?q=Saraswati"],
+  ["View all deities", "/shop"],
 ] as const;
 
 const materialLinks = [
-  ["Makrana Marble", "/shop/material/makrana-marble"],
-  ["Vietnam Marble", "/shop/material/vietnam-marble"],
-  ["Natural Stone", "/shop/material/natural-stone"],
-  ["Brass & Bronze", "/shop/material/metal"],
-  ["Eco-friendly", "/shop/material/eco-friendly"],
-  ["View all materials", "/shop/material"],
+  ["White Marble", "/shop?q=white%20marble"],
+  ["Natural White Finish", "/shop?q=natural%20white"],
+  ["Hand-painted Marble", "/shop?q=hand-painted"],
+  ["Material Guide", "/guides/materials"],
 ] as const;
 
 const featuredLinks = [
-  ["Ready to Ship", "/shop/ready-to-ship"],
-  ["New Arrivals", "/shop/new-arrivals"],
-  ["Temple Moorties", "/shop/temple"],
-  ["Home Mandir", "/shop/home-mandir"],
-  ["Limited Editions", "/shop/limited-edition"],
+  ["All Moorties", "/shop"],
+  ["Divine Families", "/shop?q=Divine%20Family"],
+  ["Wall Sculptures", "/shop?q=Wall%20Sculpture"],
+  ["Custom Commissions", "/custom-murti"],
+  ["Sizing Guide", "/guides/sizing"],
 ] as const;
 
 const mainLinks = [
@@ -48,40 +50,51 @@ const mainLinks = [
   ["Guides", "/guides"],
 ] as const;
 
-function HeaderAction({
-  href,
-  label,
-  children,
-  badge,
-}: {
-  href: string;
-  label: string;
-  children: React.ReactNode;
-  badge?: number;
-}) {
-  return (
-    <Link className={styles.headerAction} href={href} aria-label={label}>
-      {children}
-      {badge ? <span className={styles.actionBadge}>{badge}</span> : null}
-    </Link>
-  );
-}
-
-export function SiteHeader() {
+export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
+  const pathname = usePathname();
+  const savedWorks = useSavedWorks();
+  const enquiryBag = useEnquiryBag();
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [logoAnimationFinished, setLogoAnimationFinished] = useState(false);
+  const logoVideoRef = useRef<HTMLVideoElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const searchTriggerRef = useRef<HTMLButtonElement>(null);
+  const searchPanelRef = useRef<HTMLElement>(null);
+  const mobilePanelRef = useRef<HTMLDivElement>(null);
   const searchTitleId = useId();
+
+  useEffect(() => {
+    if (animateLogo && logoVideoRef.current) logoVideoRef.current.playbackRate = 2.5;
+  }, [animateLogo]);
 
   useEffect(() => {
     const overlayOpen = mobileMenuOpen || searchOpen;
     document.body.style.overflow = overlayOpen ? "hidden" : "";
+    const previouslyFocused = overlayOpen && document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const panel = searchOpen ? searchPanelRef.current : mobileMenuOpen ? mobilePanelRef.current : null;
+    const focusableSelector = "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])";
+    const focusable = panel ? Array.from(panel.querySelectorAll<HTMLElement>(focusableSelector)) : [];
+    const preferredFocus = searchOpen ? panel?.querySelector<HTMLElement>("input[type='search']") : focusable[0];
+    preferredFocus?.focus();
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setMobileMenuOpen(false);
         setSearchOpen(false);
         setMegaMenuOpen(false);
+        return;
+      }
+      if (!overlayOpen || event.key !== "Tab" || !focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
@@ -89,6 +102,7 @@ export function SiteHeader() {
     return () => {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleEscape);
+      if (overlayOpen) previouslyFocused?.focus();
     };
   }, [mobileMenuOpen, searchOpen]);
 
@@ -116,6 +130,7 @@ export function SiteHeader() {
       <header className={styles.siteHeader}>
         <div className={`${styles.headerMain} site-container`}>
           <button
+            ref={menuTriggerRef}
             className={`${styles.headerAction} ${styles.mobileMenuButton}`}
             type="button"
             aria-label="Open menu"
@@ -126,18 +141,32 @@ export function SiteHeader() {
           </button>
 
           <Link className={styles.brandLink} href="/" aria-label="Divine Stone Gallery home">
-            <Image
-              className={styles.brandLogo}
-              src="/brand/logo-horizontal.jpg"
-              alt="Divine Stone Gallery"
-              width={1400}
-              height={750}
-              priority
-            />
+            {animateLogo && !logoAnimationFinished ? (
+              <>
+                <video
+                  ref={logoVideoRef}
+                  className={styles.brandVideo}
+                  autoPlay
+                  muted
+                  playsInline
+                  preload="metadata"
+                  poster="/brand/logo-horizontal.jpg"
+                  aria-hidden="true"
+                  onEnded={() => setLogoAnimationFinished(true)}
+                  onError={() => setLogoAnimationFinished(true)}
+                >
+                  <source src="/brand/logo-animation-horizontal-web.m4v" type="video/mp4" />
+                </video>
+                <Image className={`${styles.brandLogo} ${styles.brandLogoMotionFallback}`} src="/brand/logo-square.jpg" alt="Divine Stone Gallery" width={1600} height={1600} priority />
+              </>
+            ) : (
+              <Image className={styles.brandLogo} src="/brand/logo-square.jpg" alt="Divine Stone Gallery" width={1600} height={1600} priority />
+            )}
           </Link>
 
           <nav className={styles.desktopNav} aria-label="Main navigation">
             <button
+              ref={searchTriggerRef}
               className={styles.navLink}
               type="button"
               aria-expanded={megaMenuOpen}
@@ -163,15 +192,24 @@ export function SiteHeader() {
             >
               <Search aria-hidden="true" size={21} strokeWidth={1.6} />
             </button>
-            <HeaderAction href="/account" label="Customer account">
-              <CircleUserRound aria-hidden="true" size={21} strokeWidth={1.6} />
-            </HeaderAction>
-            <HeaderAction href="/wishlist" label="Wishlist">
+            <a
+              className={`${styles.headerAction} ${styles.desktopOnlyAction}`}
+              href="https://wa.me/916376871065?text=Namaste%2C%20I%20would%20like%20assistance%20from%20Divine%20Stone%20Gallery."
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Chat with Divine Stone Gallery on WhatsApp"
+            >
+              <MessageCircle aria-hidden="true" size={21} strokeWidth={1.6} />
+            </a>
+            <AccountControl className={`${styles.headerAction} ${styles.desktopOnlyAction}`} />
+            <Link className={`${styles.headerAction} ${styles.desktopOnlyAction}`} href="/wishlist" aria-label={`Wishlist with ${savedWorks.count} saved ${savedWorks.count === 1 ? "work" : "works"}`}>
               <Heart aria-hidden="true" size={21} strokeWidth={1.6} />
-            </HeaderAction>
-            <HeaderAction href="/cart" label="Shopping bag" badge={0}>
+              {savedWorks.count ? <span className={styles.actionBadge}>{savedWorks.count}</span> : null}
+            </Link>
+            <Link className={styles.headerAction} href="/cart" aria-label={`Enquiry bag with ${enquiryBag.count} ${enquiryBag.count === 1 ? "work" : "works"}`}>
               <ShoppingBag aria-hidden="true" size={21} strokeWidth={1.6} />
-            </HeaderAction>
+              {enquiryBag.count ? <span className={styles.actionBadge}>{enquiryBag.count}</span> : null}
+            </Link>
           </div>
         </div>
 
@@ -231,7 +269,7 @@ export function SiteHeader() {
             aria-label="Close search"
             onClick={() => setSearchOpen(false)}
           />
-          <section className={styles.searchPanel}>
+          <section className={styles.searchPanel} ref={searchPanelRef} tabIndex={-1}>
             <div className="site-container">
               <div className={styles.overlayHeading}>
                 <div>
@@ -259,9 +297,9 @@ export function SiteHeader() {
               </form>
               <div className={styles.quickSearches}>
                 <span>Popular:</span>
-                <Link href="/shop/deity/ganesha">Ganesha</Link>
-                <Link href="/shop/deity/radha-krishna">Radha Krishna</Link>
-                <Link href="/shop/ready-to-ship">Ready to ship</Link>
+                <Link href="/shop?q=Ganesha">Ganesha</Link>
+                <Link href="/shop?q=Radha%20Krishna">Radha Krishna</Link>
+                <Link href="/shop?q=Lakshmi">Lakshmi</Link>
               </div>
             </div>
           </section>
@@ -276,7 +314,7 @@ export function SiteHeader() {
             aria-label="Close menu"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className={styles.mobileDrawerPanel}>
+          <div className={styles.mobileDrawerPanel} ref={mobilePanelRef} tabIndex={-1}>
             <div className={styles.mobileDrawerHeader}>
               <Image src="/brand/logo-horizontal.jpg" alt="Divine Stone Gallery" width={280} height={150} />
               <button
@@ -314,11 +352,11 @@ export function SiteHeader() {
       ) : null}
 
       <nav className={styles.mobileBottomNav} aria-label="Quick navigation">
-        <Link href="/"><Home aria-hidden="true" size={20} /><span>Home</span></Link>
-        <Link href="/shop"><ShoppingBag aria-hidden="true" size={20} /><span>Shop</span></Link>
-        <Link href="/custom-murti"><Sparkles aria-hidden="true" size={20} /><span>Custom</span></Link>
-        <Link href="/wishlist"><Heart aria-hidden="true" size={20} /><span>Wishlist</span></Link>
-        <Link href="/account"><CircleUserRound aria-hidden="true" size={20} /><span>Account</span></Link>
+        <Link className={pathname === "/" ? styles.mobileNavActive : undefined} href="/" aria-current={pathname === "/" ? "page" : undefined}><Home aria-hidden="true" size={20} /><span>Home</span></Link>
+        <Link className={pathname.startsWith("/shop") || pathname.startsWith("/products/") ? styles.mobileNavActive : undefined} href="/shop" aria-current={pathname.startsWith("/shop") || pathname.startsWith("/products/") ? "page" : undefined}><ShoppingBag aria-hidden="true" size={20} /><span>Shop</span></Link>
+        <Link className={pathname.startsWith("/custom-murti") ? styles.mobileNavActive : undefined} href="/custom-murti" aria-current={pathname.startsWith("/custom-murti") ? "page" : undefined}><Sparkles aria-hidden="true" size={20} /><span>Custom</span></Link>
+        <Link className={pathname.startsWith("/wishlist") ? styles.mobileNavActive : undefined} href="/wishlist" aria-current={pathname.startsWith("/wishlist") ? "page" : undefined}><Heart aria-hidden="true" size={20} /><span>Wishlist{savedWorks.count ? ` (${savedWorks.count})` : ""}</span></Link>
+        <Link className={pathname.startsWith("/account") ? styles.mobileNavActive : undefined} href="/account" aria-current={pathname.startsWith("/account") ? "page" : undefined}><CircleUserRound aria-hidden="true" size={20} /><span>Account</span></Link>
       </nav>
     </>
   );

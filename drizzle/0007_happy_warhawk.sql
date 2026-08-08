@@ -1,0 +1,2 @@
+ALTER TABLE `payments` ADD `provider_order_id` text;--> statement-breakpoint
+CREATE UNIQUE INDEX `payments_provider_order_unique` ON `payments` (`provider`,`provider_order_id`) WHERE "payments"."provider_order_id" is not null;

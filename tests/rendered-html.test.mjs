@@ -1,91 +1,162 @@
 import assert from "node:assert/strict";
-import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
-const developmentPreviewMeta =
-  /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
-const templateRoot = new URL("../", import.meta.url);
-const previewRoot = new URL("../app/_sites-preview/", import.meta.url);
-
-async function render() {
+async function render(pathname = "/", init = {}) {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${pathname}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", {
-      headers: { accept: "text/html" },
-    }),
-    {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
-    },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
+    new Request(`http://localhost${pathname}`, { ...init, headers: { accept: "text/html", ...init.headers } }),
+    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
+    { waitUntil() {}, passThroughOnException() {} },
   );
 }
 
-test("server-renders the starter loading skeleton", async () => {
+test("server-renders the Divine Stone Gallery homepage", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, developmentPreviewMeta);
-  assert.match(html, /<title>Your site is taking shape<\/title>/i);
-  assert.match(html, /Building your site/);
-  assert.match(html, /Your site is taking shape/);
-  assert.match(
-    html,
-    /Your first version will appear here automatically when it’s ready\./,
-  );
-  assert.doesNotMatch(html, /Codex/);
-  assert.match(html, /react-loading-skeleton/);
-  assert.match(html, /role="status"/);
+  assert.match(html, /Divine Stone Gallery/i);
+  assert.match(html, /Sacred forms/i);
+  assert.match(html, /Fourth-generation master moortikars/i);
+  assert.doesNotMatch(html, /Your site is taking shape|Building your site|codex-preview/i);
+  assert.match(html, /href=["']\/account["']/i);
+  assert.match(html, /href=["']\/wishlist["']/i);
+  assert.match(html, /href=["']\/cart["']/i);
+  assert.match(html, /href=["']#main-content["']/i);
+  assert.match(html, /<main[^>]+id=["']main-content["']/i);
+  assert.match(html, /rel=["']canonical["']/i);
+  assert.equal(html.match(/<title>(.*?)<\/title>/i)?.[1], "Divine Stone Gallery | Hand-Carved Marble Moorties");
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(response.headers.get("x-frame-options"), "SAMEORIGIN");
+  assert.equal(response.headers.get("cross-origin-opener-policy"), "same-origin-allow-popups");
+  assert.match(response.headers.get("content-security-policy") ?? "", /frame-ancestors 'self'/i);
 });
 
-test("keeps the loading skeleton scoped and disposable", async () => {
-  const [preview, css, page, layout, packageJson, files] = await Promise.all([
-    readFile(new URL("SkeletonPreview.tsx", previewRoot), "utf8"),
-    readFile(new URL("preview.css", previewRoot), "utf8"),
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readdir(previewRoot),
-  ]);
+test("renders every customer-facing route", async () => {
+  const routes = [
+    "/shop",
+    "/products/radha-krishna-39-inch-marble",
+    "/custom-murti",
+    "/our-story",
+    "/artisans",
+    "/guides",
+    "/guides/materials",
+    "/contact",
+    "/faq",
+    "/shipping",
+    "/privacy",
+    "/terms",
+    "/returns",
+    "/account/orders",
+    "/sign-in",
+    "/sign-up",
+    "/wishlist",
+    "/cart",
+    "/checkout",
+    "/track-order",
+  ];
 
-  assert.deepEqual(files.sort(), ["SkeletonPreview.tsx", "preview.css"]);
-  assert.match(preview, /from "react-loading-skeleton"/);
-  assert.match(preview, /baseColor="#eceae7"/);
-  assert.match(preview, /highlightColor="#f9f8f6"/);
-  assert.match(preview, /duration=\{2\.8\}/);
-  assert.match(preview, /sites-skeleton-search-placeholder/);
-  assert.match(packageJson, /"react-loading-skeleton": "3\.5\.0"/);
+  for (const route of routes) {
+    const response = await render(route);
+    assert.equal(response.status, 200, `${route} should render successfully`);
+    assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i, `${route} should return HTML`);
+  }
 
-  const shellIndex = preview.indexOf('className="sites-skeleton-shell"');
-  const statusIndex = preview.indexOf('className="sites-skeleton-status"');
-  assert.ok(shellIndex >= 0 && statusIndex > shellIndex);
-  assert.match(css, /position:\s*fixed/);
-  assert.match(css, /inset:\s*0/);
-  assert.match(css, /opacity:\s*0\.52/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce/);
-  assert.doesNotMatch(css, /#020617|canvas|pets|progress/i);
-  assert.doesNotMatch(
-    preview,
-    /loading-spinner|status-mark|status-progress|canvas|cookie|random/i,
-  );
+  const protectedRoutes = [
+    "/account",
+    "/account/commissions",
+    "/account/commissions/DSG-C-DEMO",
+    "/admin/products",
+    "/admin/commissions",
+    "/admin/notifications",
+  ];
 
-  assert.match(page, /export const metadata:\s*Metadata/);
-  assert.match(page, /"codex-preview": "development"/);
-  assert.match(page, /<SkeletonPreview \/>/);
-  assert.match(layout, /title:\s*"Starter Project"/);
-  assert.doesNotMatch(layout, /codex-preview|_sites-preview|themeColor|\bViewport\b/);
-  assert.doesNotMatch(css, /(^|\s)(html|body)\s*\{/m);
+  for (const route of protectedRoutes) {
+    const response = await render(route);
+    assert.ok([200, 307].includes(response.status), `${route} should render locally or redirect securely when authentication is configured`);
+    if (response.status === 307) {
+      assert.match(response.headers.get("location") ?? "", /^\/sign-in(?:\?|$)/, `${route} should redirect to sign-in`);
+    } else {
+      assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i, `${route} should return HTML`);
+    }
+  }
+});
 
-  await assert.rejects(
-    access(new URL("public/_sites-preview", templateRoot)),
-  );
+test("serves the public catalogue API with the seeded collection", async () => {
+  const response = await render("/api/v1/products");
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^application\/json\b/i);
+  const payload = await response.json();
+  assert.equal(payload.data.length, 9);
+  assert.equal(payload.meta.total, 9);
+  assert.ok(payload.data.every((product) => product.pricePaise == null));
+});
+
+test("protects account collection APIs from anonymous access", async () => {
+  const routes = [
+    "/api/v1/me/collections",
+    "/api/v1/me/wishlist",
+    "/api/v1/me/cart",
+    "/api/v1/checkout",
+    "/api/v1/orders",
+    "/api/v1/commissions",
+  ];
+
+  for (const route of routes) {
+    const response = await render(route);
+    assert.equal(response.status, 401, `${route} should require sign-in`);
+    assert.match(response.headers.get("content-type") ?? "", /^application\/json\b/i);
+    const payload = await response.json();
+    assert.equal(payload.error.code, "AUTH_REQUIRED");
+  }
+
+  const shipping = await render("/api/v1/shipping/rates", { method: "POST" });
+  assert.equal(shipping.status, 401, "shipping rates should require sign-in");
+  assert.equal((await shipping.json()).error.code, "AUTH_REQUIRED");
+
+  const paymentVerification = await render("/api/v1/payments/razorpay/verify", { method: "POST" });
+  assert.equal(paymentVerification.status, 401, "payment verification should require sign-in");
+  assert.equal((await paymentVerification.json()).error.code, "AUTH_REQUIRED");
+
+  const accountPreference = await render("/api/v1/me", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ whatsappTransactionalUpdates: true }) });
+  assert.equal(accountPreference.status, 401, "communication preferences should require sign-in");
+  assert.equal((await accountPreference.json()).error.code, "AUTH_REQUIRED");
+
+  const staffCommissions = await render("/api/v1/admin/commissions");
+  assert.equal(staffCommissions.status, 401, "commission administration should require staff sign-in");
+
+  const staffNotifications = await render("/api/v1/admin/notifications");
+  assert.equal(staffNotifications.status, 401, "notification administration should require staff sign-in");
+});
+
+test("redirects duplicate routes to their canonical pages", async () => {
+  const redirects = [
+    ["/craftsmanship", "/artisans"],
+    ["/damage-protection", "/shipping#damage-protection"],
+  ];
+
+  for (const [source, destination] of redirects) {
+    const response = await render(source);
+    assert.ok([307, 308].includes(response.status), `${source} should redirect`);
+    assert.equal(new URL(response.headers.get("location"), "http://localhost").pathname + new URL(response.headers.get("location"), "http://localhost").hash, destination);
+  }
+});
+
+test("serves robots and sitemap metadata routes", async () => {
+  const robots = await render("/robots.txt");
+  assert.equal(robots.status, 200);
+  const robotsText = await robots.text();
+  assert.match(robotsText, /User-Agent:\s*\*/i);
+  assert.match(robotsText, /Disallow:\s*\/checkout/i);
+
+  const sitemap = await render("/sitemap.xml");
+  assert.equal(sitemap.status, 200);
+  const xml = await sitemap.text();
+  assert.match(xml, /<urlset/i);
+  assert.match(xml, /\/products\/radha-krishna-39-inch-marble/i);
+  assert.doesNotMatch(xml, /<lastmod>/i);
 });

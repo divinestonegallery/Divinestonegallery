@@ -17,8 +17,8 @@ export function CookieConsent() {
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
-  function savePreference(value: "all" | "essential") {
-    window.localStorage.setItem(consentKey, value);
+  function savePreference() {
+    window.localStorage.setItem(consentKey, "acknowledged");
     setVisible(false);
   }
 
@@ -28,12 +28,11 @@ export function CookieConsent() {
     <section className={styles.cookieConsent} aria-label="Cookie preferences">
       <div>
         <strong>Your privacy matters</strong>
-        <p>We use essential cookies for a reliable shopping experience. Optional cookies help us improve the gallery.</p>
+        <p>This site currently uses local preference storage to remember this notice. It does not use advertising trackers.</p>
         <Link href="/privacy">Privacy details</Link>
       </div>
       <div className={styles.cookieActions}>
-        <button type="button" onClick={() => savePreference("essential")}>Essential only</button>
-        <button type="button" onClick={() => savePreference("all")}>Accept all</button>
+        <button type="button" onClick={savePreference}>Understood</button>
       </div>
     </section>
   );

@@ -40,17 +40,43 @@
 }
 
 .brandLink {
+  position: relative;
   display: block;
-  width: 190px;
+  width: 172px;
+  height: 92px;
   flex: none;
+  overflow: hidden;
 }
 
 .brandLogo {
-  width: 100%;
-  height: 66px;
-  object-fit: cover;
-  object-position: center;
+  position: absolute;
+  top: -41px;
+  left: 50%;
+  display: block;
+  width: 152px;
+  height: 152px;
+  object-fit: contain;
   mix-blend-mode: multiply;
+  transform: translateX(-50%);
+}
+
+.brandLogoMotionFallback {
+  display: none;
+}
+
+.brandVideo {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1400 / 750;
+  object-fit: contain;
+  background: var(--surface);
+  mix-blend-mode: multiply;
+  transform: scale(1.08);
+  transform-origin: center;
 }
 
 .desktopNav {
@@ -106,6 +132,12 @@
 .headerAction:hover {
   color: var(--gold-deep);
   background: var(--surface-muted);
+}
+
+@media (max-width: 980px) {
+  .desktopOnlyAction {
+    display: none;
+  }
 }
 
 .actionBadge {
@@ -501,6 +533,21 @@
   text-transform: none !important;
 }
 
+.newsletterCta {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  justify-self: end;
+  padding-inline: 1.25rem;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  border-radius: var(--radius-pill);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
 .siteFooter {
   color: #ddd5ca;
   background: #211f1b;
@@ -515,9 +562,9 @@
 
 .footerBrand img {
   width: 190px;
-  height: 90px;
+  height: auto;
   margin-bottom: 1rem;
-  object-fit: cover;
+  object-fit: contain;
   filter: invert(1) grayscale(1);
   mix-blend-mode: screen;
 }
@@ -613,6 +660,10 @@
   font-weight: 600;
 }
 
+.whatsappButtonElevated {
+  bottom: 9.5rem;
+}
+
 .cookieConsent {
   position: fixed;
   right: 1rem;
@@ -683,22 +734,25 @@
   }
 
   .brandLink {
-    width: 165px;
+    width: 160px;
+    height: 88px;
+    justify-self: center;
     margin-inline: auto;
   }
 
   .brandLogo {
-    height: 58px;
-  }
-
-  .headerActions > :nth-child(2),
-  .headerActions > :nth-child(3) {
-    display: none;
+    top: -40px;
+    width: 148px;
+    height: 148px;
   }
 
   .newsletterInner {
     grid-template-columns: 1fr;
     gap: 1.75rem;
+  }
+
+  .newsletterCta {
+    justify-self: start;
   }
 
   .footerGrid {
@@ -730,16 +784,19 @@
   }
 
   .brandLink {
-    width: 140px;
+    width: clamp(140px, 38vw, 160px);
+    height: 84px;
   }
 
   .brandLogo {
-    height: 52px;
+    top: -39px;
+    width: 146px;
+    height: 146px;
   }
 
   .headerAction {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
   }
 
   .headerActions {
@@ -786,7 +843,7 @@
     font-size: 0.62rem;
   }
 
-  .mobileBottomNav a:nth-child(3) {
+  .mobileBottomNav a.mobileNavActive {
     color: var(--gold-deep);
   }
 
@@ -824,11 +881,16 @@
   }
 
   .whatsappButton {
+    display: none;
     right: 0.8rem;
     bottom: 74px;
     width: 48px;
     padding: 0;
     justify-content: center;
+  }
+
+  .whatsappButtonElevated {
+    bottom: 84px;
   }
 
   .whatsappButton span {
@@ -843,11 +905,19 @@
 
   .cookieActions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .brandVideo {
+    display: none;
+  }
+
+  .brandLogoMotionFallback {
+    display: block;
+  }
+
   .navLink,
   .headerAction,
   .megaColumn a,
