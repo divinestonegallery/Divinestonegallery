@@ -157,10 +157,10 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
                 >
                   <source src="/brand/logo-animation-horizontal-web.m4v" type="video/mp4" />
                 </video>
-                <Image className={`${styles.brandLogo} ${styles.brandLogoMotionFallback}`} src="/brand/logo-square.jpg" alt="Divine Stone Gallery" width={1600} height={1600} priority />
+                <Image className={`${styles.brandLogo} ${styles.brandLogoMotionFallback}`} src="/brand/logo-square-warm.jpg" alt="Divine Stone Gallery" width={1600} height={1600} priority />
               </>
             ) : (
-              <Image className={styles.brandLogo} src="/brand/logo-square.jpg" alt="Divine Stone Gallery" width={1600} height={1600} priority />
+              <Image className={styles.brandLogo} src="/brand/logo-square-warm.jpg" alt="Divine Stone Gallery" width={1600} height={1600} priority />
             )}
           </Link>
 
