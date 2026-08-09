@@ -1,7 +1,7 @@
 .adminSection {
-  min-height: 620px;
-  padding-block: clamp(2.5rem, 6vw, 5rem) clamp(7rem, 10vw, 9rem);
-  background: var(--surface);
+  min-height: 0;
+  padding: 0;
+  background: transparent;
 }
 
 .stateCard {
@@ -13,6 +13,7 @@
   border-radius: var(--radius-lg);
   text-align: center;
   background: var(--background);
+  margin-block: 2rem 6rem;
 }
 
 .stateCard > * { max-width: 620px; }
