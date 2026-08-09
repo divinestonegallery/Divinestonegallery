@@ -62,7 +62,7 @@ const groups: Array<{ label: string; items: NavItem[] }> = [
   {
     label: "Website",
     items: [
-      { label: "Pages & sections", icon: GalleryVerticalEnd, description: "Block-based website builder" },
+      { label: "Pages & sections", href: "/admin/pages", icon: GalleryVerticalEnd, description: "Block-based website builder" },
       { label: "Media library", icon: Images, description: "ImageKit assets and folders" },
       { label: "Navigation", icon: Tags, description: "Menus, collections and links" },
       { label: "Content & SEO", icon: FileText, description: "Copy, metadata and redirects" },

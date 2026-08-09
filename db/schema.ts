@@ -324,6 +324,65 @@ export const mediaAssets = pgTable(
   ],
 );
 
+export const sitePages = pgTable(
+  "site_pages",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    navigationTitle: text("navigation_title"),
+    status: text("status", { enum: ["draft", "published", "archived"] })
+      .notNull()
+      .default("draft"),
+    isSystem: boolean("is_system").notNull().default(false),
+    seoTitle: text("seo_title"),
+    seoDescription: text("seo_description"),
+    publishedAt: integer("published_at"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("site_pages_slug_unique").on(table.slug),
+    index("site_pages_status_idx").on(table.status, table.updatedAt),
+  ],
+);
+
+export const siteSections = pgTable(
+  "site_sections",
+  {
+    id: text("id").primaryKey(),
+    pageId: text("page_id")
+      .notNull()
+      .references(() => sitePages.id, { onDelete: "cascade" }),
+    sectionKey: text("section_key").notNull(),
+    blockType: text("block_type", {
+      enum: ["hero", "rich_text", "image_text", "collection", "feature_grid", "callout", "faq"],
+    }).notNull(),
+    eyebrow: text("eyebrow"),
+    heading: text("heading"),
+    body: text("body"),
+    ctaLabel: text("cta_label"),
+    ctaHref: text("cta_href"),
+    secondaryCtaLabel: text("secondary_cta_label"),
+    secondaryCtaHref: text("secondary_cta_href"),
+    mediaAssetId: text("media_asset_id").references(() => mediaAssets.id, {
+      onDelete: "set null",
+    }),
+    mediaPosition: text("media_position", { enum: ["left", "right", "background"] })
+      .notNull()
+      .default("right"),
+    contentJson: text("content_json").notNull().default("[]"),
+    styleVariant: text("style_variant").notNull().default("light"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isVisible: boolean("is_visible").notNull().default(true),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("site_sections_page_key_unique").on(table.pageId, table.sectionKey),
+    index("site_sections_page_order_idx").on(table.pageId, table.sortOrder),
+    check("site_sections_sort_nonnegative", sql`${table.sortOrder} >= 0`),
+  ],
+);
+
 export const productMedia = pgTable(
   "product_media",
   {
