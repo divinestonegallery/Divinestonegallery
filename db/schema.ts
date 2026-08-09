@@ -390,6 +390,38 @@ export const siteSections = pgTable(
   ],
 );
 
+export const sitePageVersions = pgTable(
+  "site_page_versions",
+  {
+    id: text("id").primaryKey(),
+    pageId: text("page_id")
+      .notNull()
+      .references(() => sitePages.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull(),
+    label: text("label").notNull(),
+    snapshotJson: text("snapshot_json").notNull(),
+    createdByUserId: text("created_by_user_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: integer("created_at").notNull().default(sql`(extract(epoch from now())::integer)`),
+  },
+  (table) => [
+    uniqueIndex("site_page_versions_number_unique").on(table.pageId, table.versionNumber),
+    index("site_page_versions_timeline_idx").on(table.pageId, table.createdAt),
+  ],
+);
+
+export const businessSettings = pgTable(
+  "business_settings",
+  {
+    key: text("key").primaryKey(),
+    value: text("value").notNull(),
+    groupName: text("group_name").notNull().default("general"),
+    isSecret: boolean("is_secret").notNull().default(false),
+    updatedByUserId: text("updated_by_user_id").references(() => users.id, { onDelete: "set null" }),
+    ...timestamps,
+  },
+  (table) => [index("business_settings_group_idx").on(table.groupName)],
+);
+
 export const productMedia = pgTable(
   "product_media",
   {

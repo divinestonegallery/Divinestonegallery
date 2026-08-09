@@ -59,6 +59,12 @@
 
 .pageSettings { margin-bottom: .8rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--background); }
 .pageSettings summary { display: flex; min-height: 48px; align-items: center; gap: .5rem; padding-inline: .9rem; font-size: .68rem; font-weight: 750; cursor: pointer; }
+.pageSettings summary small { margin-left: auto; color: var(--ink-muted); font-size: .55rem; font-weight: 600; }
+.versionList { display: grid; padding: .5rem 1rem; border-top: 1px solid var(--border); background: var(--surface); }
+.versionList article { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .65rem 0; border-bottom: 1px solid var(--border); }
+.versionList article:last-child { border-bottom: 0; }
+.versionList article > span { display: grid; gap: .15rem; }
+.versionList article small, .versionList p { color: var(--ink-muted); font-size: .58rem; }
 .settingsGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; padding: 1rem; border-top: 1px solid var(--border); background: var(--surface); }
 .settingsGrid .wide { grid-column: span 2; }
 .settingsGrid > button { align-self: end; }

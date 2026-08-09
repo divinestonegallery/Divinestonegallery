@@ -1,9 +1,27 @@
-import { asc, eq, sql } from "drizzle-orm";
-import { auditLogs, mediaAssets, sitePages, siteSections } from "@/db/schema";
+import { asc, desc, eq, max, sql } from "drizzle-orm";
+import { auditLogs, mediaAssets, sitePages, sitePageVersions, siteSections } from "@/db/schema";
 
 async function database() {
   const { getDb } = await import("@/db");
   return getDb();
+}
+
+async function savePageVersion(pageId: string, label: string, actorUserId: string) {
+  const db = await database();
+  const [[page], sections, [latest]] = await Promise.all([
+    db.select().from(sitePages).where(eq(sitePages.id, pageId)).limit(1),
+    db.select().from(siteSections).where(eq(siteSections.pageId, pageId)).orderBy(asc(siteSections.sortOrder)),
+    db.select({ value: max(sitePageVersions.versionNumber) }).from(sitePageVersions).where(eq(sitePageVersions.pageId, pageId)),
+  ]);
+  if (!page) return;
+  await db.insert(sitePageVersions).values({
+    id: `version:${crypto.randomUUID()}`,
+    pageId,
+    versionNumber: (latest?.value ?? 0) + 1,
+    label,
+    snapshotJson: JSON.stringify({ page, sections }),
+    createdByUserId: actorUserId,
+  });
 }
 
 export async function listAdminSitePages() {
@@ -68,6 +86,7 @@ export type SitePagePatch = Partial<NewSitePage & {
 
 export async function updateAdminSitePage(id: string, patch: SitePagePatch, actorUserId: string) {
   const db = await database();
+  await savePageVersion(id, patch.status === "published" ? "Before publishing" : "Before page update", actorUserId);
   await db.batch([
     db.update(sitePages).set({
       ...patch,
@@ -101,6 +120,7 @@ export type NewSiteSection = {
 export async function createAdminSiteSection(input: NewSiteSection, actorUserId: string) {
   const db = await database();
   const id = `section:${crypto.randomUUID()}`;
+  await savePageVersion(input.pageId, "Before adding section", actorUserId);
   await db.batch([
     db.insert(siteSections).values({ id, ...input }),
     db.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId, action: "site_section.created", entityType: "site_section", entityId: id, changesJson: JSON.stringify(input) }),
@@ -112,6 +132,8 @@ export type SiteSectionPatch = Partial<Omit<NewSiteSection, "pageId">>;
 
 export async function updateAdminSiteSection(id: string, patch: SiteSectionPatch, actorUserId: string) {
   const db = await database();
+  const [section] = await db.select({ pageId: siteSections.pageId }).from(siteSections).where(eq(siteSections.id, id)).limit(1);
+  if (section) await savePageVersion(section.pageId, "Before section update", actorUserId);
   await db.batch([
     db.update(siteSections).set({ ...patch, updatedAt: sql`(extract(epoch from now())::integer)` }).where(eq(siteSections.id, id)),
     db.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId, action: "site_section.updated", entityType: "site_section", entityId: id, changesJson: JSON.stringify(patch) }),
@@ -123,6 +145,7 @@ export async function duplicateAdminSiteSection(id: string, actorUserId: string)
   const db = await database();
   const [source] = await db.select().from(siteSections).where(eq(siteSections.id, id)).limit(1);
   if (!source) throw new Error("SECTION_NOT_FOUND");
+  await savePageVersion(source.pageId, "Before section duplication", actorUserId);
   const copyId = `section:${crypto.randomUUID()}`;
   const copyKey = `${source.sectionKey}-copy-${crypto.randomUUID().slice(0, 5)}`;
   await db.batch([
@@ -139,4 +162,34 @@ export async function duplicateAdminSiteSection(id: string, actorUserId: string)
     db.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId, action: "site_section.duplicated", entityType: "site_section", entityId: copyId, changesJson: JSON.stringify({ sourceId: id }) }),
   ]);
   return listAdminSitePages();
+}
+
+export async function listPageVersions(pageId: string) {
+  const db = await database();
+  return db.select({ id: sitePageVersions.id, pageId: sitePageVersions.pageId, versionNumber: sitePageVersions.versionNumber, label: sitePageVersions.label, createdAt: sitePageVersions.createdAt })
+    .from(sitePageVersions).where(eq(sitePageVersions.pageId, pageId)).orderBy(desc(sitePageVersions.versionNumber)).limit(30);
+}
+
+export async function restorePageVersion(versionId: string, actorUserId: string) {
+  const db = await database();
+  const [version] = await db.select().from(sitePageVersions).where(eq(sitePageVersions.id, versionId)).limit(1);
+  if (!version) throw new Error("VERSION_NOT_FOUND");
+  const snapshot = JSON.parse(version.snapshotJson) as { page: typeof sitePages.$inferSelect; sections: Array<typeof siteSections.$inferSelect> };
+  await savePageVersion(version.pageId, `Before restoring version ${version.versionNumber}`, actorUserId);
+  await db.transaction(async (tx) => {
+    await tx.update(sitePages).set({
+      title: snapshot.page.title, slug: snapshot.page.slug, navigationTitle: snapshot.page.navigationTitle,
+      status: snapshot.page.status, seoTitle: snapshot.page.seoTitle, seoDescription: snapshot.page.seoDescription,
+      publishedAt: snapshot.page.publishedAt, updatedAt: sql`(extract(epoch from now())::integer)`,
+    }).where(eq(sitePages.id, version.pageId));
+    await tx.delete(siteSections).where(eq(siteSections.pageId, version.pageId));
+    if (snapshot.sections.length) await tx.insert(siteSections).values(snapshot.sections.map((section) => ({ ...section, updatedAt: sql`(extract(epoch from now())::integer)` })));
+    await tx.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId, action: "site_page.version_restored", entityType: "site_page", entityId: version.pageId, changesJson: JSON.stringify({ versionId, versionNumber: version.versionNumber }) });
+  });
+  return listAdminSitePages();
+}
+
+export async function pagePreviewData(pageId: string) {
+  const data = await listAdminSitePages();
+  return data.pages.find((page) => page.id === pageId) ?? null;
 }

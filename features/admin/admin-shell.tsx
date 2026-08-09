@@ -71,8 +71,8 @@ const groups: Array<{ label: string; items: NavItem[] }> = [
   {
     label: "System",
     items: [
-      { label: "Settings", icon: Settings, description: "Business and integration settings" },
-      { label: "Staff & security", icon: ShieldCheck, description: "Permissions and audit history" },
+      { label: "Settings", href: "/admin/settings", icon: Settings, description: "Business and integration settings" },
+      { label: "Staff & security", href: "/admin/staff", icon: ShieldCheck, description: "Permissions and audit history" },
     ],
   },
 ];
