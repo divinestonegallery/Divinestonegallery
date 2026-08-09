@@ -54,6 +54,13 @@ function parseImageKitStorageKey(key: string) {
   };
 }
 
+export function publicUrlForMediaKey(key: string) {
+  const configuration = imageKitConfiguration();
+  const stored = parseImageKitStorageKey(key);
+  if (!configuration || !stored) return null;
+  return `${configuration.urlEndpoint}/${stored.filePath.replace(/^\/+/, "")}`;
+}
+
 function imageKitSignedUrl(filePath: string, expiresIn = 300) {
   const configuration = imageKitConfiguration();
   if (!configuration) throw new Error("ImageKit storage is unavailable.");

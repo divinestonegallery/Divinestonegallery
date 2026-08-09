@@ -315,12 +315,19 @@ export const mediaAssets = pgTable(
       .default("pending"),
     checksumSha256: text("checksum_sha256"),
     altText: text("alt_text"),
+    caption: text("caption"),
+    folder: text("folder").notNull().default("Gallery"),
+    tagsJson: text("tags_json").notNull().default("[]"),
+    focalPointX: integer("focal_point_x").notNull().default(50),
+    focalPointY: integer("focal_point_y").notNull().default(50),
     ...timestamps,
   },
   (table) => [
     uniqueIndex("media_assets_storage_key_unique").on(table.storageKey),
     index("media_assets_uploader_idx").on(table.uploadedByUserId, table.createdAt),
     check("media_assets_size_nonnegative", sql`${table.byteSize} >= 0`),
+    check("media_assets_focal_x_valid", sql`${table.focalPointX} >= 0 and ${table.focalPointX} <= 100`),
+    check("media_assets_focal_y_valid", sql`${table.focalPointY} >= 0 and ${table.focalPointY} <= 100`),
   ],
 );
 

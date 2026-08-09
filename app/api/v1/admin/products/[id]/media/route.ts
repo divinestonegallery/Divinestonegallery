@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { authorizeStaff } from "@/auth/authorization";
 import { getDb } from "@/db";
 import { auditLogs, mediaAssets, productMedia, products } from "@/db/schema";
-import { getMediaBucket } from "@/storage/media";
+import { getMediaBucket, publicUrlForMediaKey } from "@/storage/media";
 import { validateProductImage } from "@/storage/image-upload";
 import { declaredBodyExceeds } from "@/security/request-limits";
 
@@ -42,6 +42,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         id: mediaId,
         uploadedByUserId: authorization.userId,
         storageKey,
+        publicPath: publicUrlForMediaKey(storageKey),
         originalFilename: file.name.slice(0, 255) || `product.${image.extension}`,
         contentType: image.contentType,
         byteSize: file.size,
@@ -49,6 +50,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         status: "ready",
         checksumSha256: image.checksumSha256,
         altText: altText || `${product.name} hand-carved marble work`,
+        folder: "Products",
       }),
       db.insert(productMedia).values({ productId, mediaAssetId: mediaId, sortOrder: primary ? 999 : 1, isPrimary: !primary }),
       db.insert(auditLogs).values({
