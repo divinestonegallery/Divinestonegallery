@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { CookieConsent } from "@/components/site/cookie-consent";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -37,6 +38,6 @@ function Block({ section, first }: { section: PublishedSection; first: boolean }
   return <section className={styles.split} data-tone={section.styleVariant} data-media={section.mediaPosition}><div className="site-container">{image ? <div className={styles.splitImage}><Image src={image} alt={section.mediaAltText ?? section.heading ?? "Marble sculpture"} fill sizes="(max-width: 850px) 100vw, 48vw" /></div> : null}<div className={styles.splitCopy}><small>{section.eyebrow}</small><h2 className="font-display">{section.heading}</h2><p>{section.body}</p><div className={styles.actions}>{action(section.ctaLabel, section.ctaHref)}{action(section.secondaryCtaLabel, section.secondaryCtaHref, true)}</div></div></div></section>;
 }
 
-export function PublishedPageView({ page, animateLogo = false }: { page: PublishedPage; animateLogo?: boolean }) {
-  return <ToastProvider><SiteHeader animateLogo={animateLogo} /><main id="main-content" tabIndex={-1}>{page.sections.map((section, index) => <Block section={section} first={index === 0} key={section.id} />)}</main><SiteFooter /><WhatsAppAssistance elevated={page.slug === "home"} /><CookieConsent /></ToastProvider>;
+export function PublishedPageView({ page, animateLogo = false, protectedContent }: { page: PublishedPage; animateLogo?: boolean; protectedContent?: ReactNode }) {
+  return <ToastProvider><SiteHeader animateLogo={animateLogo} /><main id="main-content" tabIndex={-1}>{page.sections.map((section, index) => <Block section={section} first={index === 0} key={section.id} />)}{protectedContent}</main><SiteFooter /><WhatsAppAssistance elevated={page.slug === "home"} /><CookieConsent /></ToastProvider>;
 }

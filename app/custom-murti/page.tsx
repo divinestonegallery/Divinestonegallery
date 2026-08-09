@@ -46,6 +46,10 @@ const faqItems = [
   { id: "delivery", title: "How is a large murti delivered?", content: <p>Packing and delivery are planned around the work&apos;s final dimensions, weight and destination. The available arrangement is explained before confirmation.</p> },
 ] as const;
 
+function ConsultationSection() {
+  return <section className={styles.formSection} id="consultation"><div className={`${styles.formLayout} site-container`}><div className={styles.formIntro}><p className={styles.eyebrow}>Your first brief</p><h2 className="font-display">Start with what you already know.</h2><p>A few details help our gallery understand the direction. Nothing entered here is a final commitment.</p><div className={styles.formImage}><Image src="/catalog/gauri-shankar-18.jpg" alt="Custom Gauri Shankar family marble work" fill sizes="(max-width: 900px) 100vw, 40vw" /></div><ul><li><HandHeart aria-hidden="true" size={18} /> Personal consultation</li><li><Sparkles aria-hidden="true" size={18} /> Details refined together</li><li><PackageCheck aria-hidden="true" size={18} /> Packing and delivery planning</li></ul></div><ConsultationForm /></div></section>;
+}
+
 function StaticCustomMurtiPage() {
   return (
     <ToastProvider>
@@ -109,24 +113,7 @@ function StaticCustomMurtiPage() {
           </div>
         </section>
 
-        <section className={styles.formSection} id="consultation">
-          <div className={`${styles.formLayout} site-container`}>
-            <div className={styles.formIntro}>
-              <p className={styles.eyebrow}>Your first brief</p>
-              <h2 className="font-display">Start with what you already know.</h2>
-              <p>A few details help our gallery understand the direction. Nothing entered here is a final commitment.</p>
-              <div className={styles.formImage}>
-                <Image src="/catalog/gauri-shankar-18.jpg" alt="Custom Gauri Shankar family marble work" fill sizes="(max-width: 900px) 100vw, 40vw" />
-              </div>
-              <ul>
-                <li><HandHeart aria-hidden="true" size={18} /> Personal consultation</li>
-                <li><Sparkles aria-hidden="true" size={18} /> Details refined together</li>
-                <li><PackageCheck aria-hidden="true" size={18} /> Packing and delivery planning</li>
-              </ul>
-            </div>
-            <ConsultationForm />
-          </div>
-        </section>
+        <ConsultationSection />
 
         <section className={styles.faqSection}>
           <div className={`${styles.faqGrid} site-container`}>
@@ -144,5 +131,5 @@ function StaticCustomMurtiPage() {
 
 export default async function CustomMurtiPage() {
   const page = await getPublishedPage("custom-murti");
-  return page?.sections.length ? <PublishedPageView page={page} /> : <StaticCustomMurtiPage />;
+  return page?.sections.length ? <PublishedPageView page={page} protectedContent={<ConsultationSection />} /> : <StaticCustomMurtiPage />;
 }
