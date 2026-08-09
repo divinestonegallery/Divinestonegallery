@@ -37,7 +37,7 @@ for (const key of [
   "SHIPROCKET_PICKUP_POSTCODE", "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET",
   "RESEND_API_KEY", "RESEND_FROM_EMAIL", "RESEND_REPLY_TO", "MSG91_AUTH_KEY", "MSG91_SENDER_ID",
   "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_GRAPH_API_VERSION",
-  "DATABASE_URL", "S3_BUCKET", "S3_REGION", "DEPLOYMENT_TARGET",
+  "DATABASE_URL", "DEPLOYMENT_TARGET",
 ]) required(key);
 
 required(value("DEPLOYMENT_TARGET") === "vercel" ? "CRON_SECRET" : "NOTIFICATION_WORKER_SECRET", 32);
@@ -66,9 +66,13 @@ try {
 if (value("DEPLOYMENT_TARGET") && !["vercel", "aws"].includes(value("DEPLOYMENT_TARGET"))) {
   failures.push("DEPLOYMENT_TARGET must be vercel or aws");
 }
-const hasS3Credentials = Boolean(value("S3_ACCESS_KEY_ID") && value("S3_SECRET_ACCESS_KEY"));
-if (!hasS3Credentials && !(value("DEPLOYMENT_TARGET") === "aws" && value("S3_USE_IAM_ROLE") === "true")) {
-  failures.push("Configure S3 credentials, or set S3_USE_IAM_ROLE=true for an AWS IAM role");
+const hasImageKit = Boolean(value("IMAGEKIT_PRIVATE_KEY") && value("IMAGEKIT_PUBLIC_KEY") && value("IMAGEKIT_URL_ENDPOINT"));
+const hasS3Credentials = Boolean(value("S3_BUCKET") && value("S3_REGION") && value("S3_ACCESS_KEY_ID") && value("S3_SECRET_ACCESS_KEY"));
+const hasS3Role = value("DEPLOYMENT_TARGET") === "aws" && value("S3_BUCKET") && value("S3_REGION") && value("S3_USE_IAM_ROLE") === "true";
+if (!hasImageKit && !hasS3Credentials && !hasS3Role) failures.push("Configure ImageKit, S3 credentials, or an AWS S3 IAM role");
+if (value("IMAGEKIT_URL_ENDPOINT")) {
+  try { const endpoint = new URL(value("IMAGEKIT_URL_ENDPOINT")); if (endpoint.protocol !== "https:") throw new Error(); }
+  catch { failures.push("IMAGEKIT_URL_ENDPOINT must be a valid HTTPS URL"); }
 }
 if (value("S3_ENDPOINT")) {
   try { new URL(value("S3_ENDPOINT")); } catch { failures.push("S3_ENDPOINT must be a valid URL when provided"); }

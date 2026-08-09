@@ -7,10 +7,10 @@ The storefront, account area, staff console and `/api/v1` backend deploy togethe
 Create isolated local, staging and production resources:
 
 - PostgreSQL database with a pooled `DATABASE_URL` for serverless deployments;
-- private S3-compatible bucket for uploaded product and commission media;
+- ImageKit or a private S3-compatible bucket for uploaded product and commission media;
 - separate test/live credentials for Clerk, Razorpay, Shiprocket and messaging providers.
 
-Copy `.env.example` to `.env.local`. Never commit `.env.local` or production secrets. On AWS, prefer an IAM role and set `S3_USE_IAM_ROLE=true`; on Vercel, provide restricted S3 credentials through encrypted project environment variables.
+Copy `.env.example` to `.env.local`. Never commit `.env.local` or production secrets. On Vercel, use encrypted ImageKit variables; on AWS, an S3 IAM role remains available as a fallback.
 
 Apply migrations before routing production traffic:
 
@@ -24,7 +24,7 @@ npm run release:verify
 
 1. Import the private GitHub repository into Vercel.
 2. Connect a managed PostgreSQL database and add its pooled `DATABASE_URL`.
-3. Add the private S3 bucket variables from `.env.example`.
+3. Add the ImageKit variables from `.env.example`, or configure the optional private S3 fallback.
 4. Add `CRON_SECRET` with at least 32 random characters. On Vercel Hobby, `vercel.json` invokes the protected notification worker once daily at 03:00 UTC (08:30 IST). Staff can process the queue immediately from `/admin/notifications`. On Vercel Pro, change the schedule to `*/5 * * * *` for automatic five-minute delivery attempts.
 5. Add all business and provider environment variables to Preview and Production separately.
 6. Deploy a preview, run the smoke tests, then promote the validated build.

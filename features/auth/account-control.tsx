@@ -26,7 +26,6 @@ function ConfiguredAccountControl({ className }: { className?: string }) {
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) {
-      setIsAdmin(false);
       return;
     }
 

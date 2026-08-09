@@ -7,8 +7,8 @@ export async function storeCommissionImage(file: File, folder: string, altText: 
   if (!image) return null;
   const id = `media:${crypto.randomUUID()}`;
   const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, "_");
-  const storageKey = `commissions/${safeFolder}/${crypto.randomUUID()}.${image.extension}`;
-  await getMediaBucket().put(storageKey, image.bytes, {
+  let storageKey = `commissions/${safeFolder}/${crypto.randomUUID()}.${image.extension}`;
+  storageKey = await getMediaBucket().put(storageKey, image.bytes, {
     httpMetadata: { contentType: image.contentType, cacheControl: "private, max-age=3600" },
     customMetadata: { mediaId: id },
   });

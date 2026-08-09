@@ -49,7 +49,7 @@ Signed-out visitors may build a temporary wishlist and enquiry bag in browser st
 
 ## Persistence
 
-Runtime resources are provider-neutral: `DATABASE_URL` connects PostgreSQL and the `S3_*` variables connect private object storage. Vercel and AWS supply these values through their encrypted environment settings.
+Runtime resources are provider-neutral: `DATABASE_URL` connects PostgreSQL, while `IMAGEKIT_*` or `S3_*` variables connect media storage. Vercel and AWS supply these values through their encrypted environment settings.
 
 `db/schema.ts` is the canonical Drizzle schema. Generated SQL lives in `drizzle/` and must be reviewed before it is applied. `db/index.ts` is the only database connection entry point. `storage/media.ts` is the media adapter entry point.
 

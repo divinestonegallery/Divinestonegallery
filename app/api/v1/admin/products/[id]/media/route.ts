@@ -28,9 +28,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const mediaId = `media:${crypto.randomUUID()}`;
   const safeProductId = productId.replace(/[^a-zA-Z0-9_-]/g, "_");
-  const storageKey = `products/${safeProductId}/${crypto.randomUUID()}.${image.extension}`;
+  let storageKey = `products/${safeProductId}/${crypto.randomUUID()}.${image.extension}`;
   const bucket = getMediaBucket();
-  await bucket.put(storageKey, image.bytes, {
+  storageKey = await bucket.put(storageKey, image.bytes, {
     httpMetadata: { contentType: image.contentType, cacheControl: "public, max-age=31536000, immutable" },
     customMetadata: { productId, mediaId },
   });
