@@ -21,14 +21,15 @@ import { SiteHeader } from "@/components/site/site-header";
 import { WhatsAppAssistance } from "@/components/site/whatsapp-assistance";
 import { buttonClassName } from "@/components/ui/button";
 import { ToastProvider } from "@/components/ui/toast";
+import { getPublishedPage } from "@/cms/public-repository";
+import { PublishedPageView } from "@/features/cms/published-page";
 import styles from "./artisans.module.css";
 
-export const metadata: Metadata = {
-  title: "Artisans & Marble Murti Craftsmanship",
-  description:
-    "Explore the hand-carved marble murti craft practiced by Divine Stone Gallery's fourth-generation master moortikars in Alwar, Rajasthan.",
-  alternates: { canonical: "/artisans" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getPublishedPage("artisans");
+  return { title: page?.seoTitle ? { absolute: page.seoTitle } : "Artisans & Marble Murti Craftsmanship", description: page?.seoDescription ?? "Explore the hand-carved marble murti craft practiced by Divine Stone Gallery's fourth-generation master moortikars in Alwar, Rajasthan.", alternates: { canonical: "/artisans" } };
+}
+export const dynamic = "force-dynamic";
 
 const stages = [
   { icon: PencilRuler, title: "Understanding the sacred form", copy: "The deity, intended placement, scale and desired character establish the direction of the work." },
@@ -39,7 +40,7 @@ const stages = [
   { icon: Palette, title: "Finishing the work", copy: "Natural-white or painted finishes are completed by hand according to the chosen direction." },
 ] as const;
 
-export default function ArtisansPage() {
+function StaticArtisansPage() {
   return (
     <ToastProvider>
       <SiteHeader />
@@ -156,4 +157,9 @@ export default function ArtisansPage() {
       <CookieConsent />
     </ToastProvider>
   );
+}
+
+export default async function ArtisansPage() {
+  const page = await getPublishedPage("artisans");
+  return page?.sections.length ? <PublishedPageView page={page} /> : <StaticArtisansPage />;
 }

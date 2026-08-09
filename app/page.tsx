@@ -19,13 +19,15 @@ import { WhatsAppAssistance } from "@/components/site/whatsapp-assistance";
 import { buttonClassName } from "@/components/ui/button";
 import { ToastProvider } from "@/components/ui/toast";
 import { brand } from "@/config/brand";
+import { getPublishedPage } from "@/cms/public-repository";
+import { PublishedPageView } from "@/features/cms/published-page";
 import styles from "./page.module.css";
 
-export const metadata: Metadata = {
-  description:
-    "Discover authentic hand-carved marble moorties by fourth-generation master moortikars from Alwar, Rajasthan.",
-  alternates: { canonical: "/" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getPublishedPage("home");
+  return { title: page?.seoTitle ? { absolute: page.seoTitle } : undefined, description: page?.seoDescription ?? "Discover authentic hand-carved marble moorties by fourth-generation master moortikars from Alwar, Rajasthan.", alternates: { canonical: "/" } };
+}
+export const dynamic = "force-dynamic";
 
 const deityCollections = [
   {
@@ -111,7 +113,7 @@ const commissionSteps = [
   },
 ] as const;
 
-export default function Home() {
+function StaticHome() {
   return (
     <ToastProvider>
       <SiteHeader animateLogo />
@@ -315,4 +317,9 @@ export default function Home() {
       <CookieConsent />
     </ToastProvider>
   );
+}
+
+export default async function Home() {
+  const page = await getPublishedPage("home");
+  return page?.sections.length ? <PublishedPageView page={page} animateLogo /> : <StaticHome />;
 }

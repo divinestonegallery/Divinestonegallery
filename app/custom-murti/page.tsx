@@ -22,14 +22,15 @@ import { Accordion } from "@/components/ui/accordion";
 import { buttonClassName } from "@/components/ui/button";
 import { ToastProvider } from "@/components/ui/toast";
 import { ConsultationForm } from "@/features/custom-murti/consultation-form";
+import { getPublishedPage } from "@/cms/public-repository";
+import { PublishedPageView } from "@/features/cms/published-page";
 import styles from "./custom-murti.module.css";
 
-export const metadata: Metadata = {
-  title: "Custom Marble Murti Commission",
-  description:
-    "Commission a custom hand-carved marble murti with Divine Stone Gallery's fourth-generation master moortikars in Alwar, Rajasthan.",
-  alternates: { canonical: "/custom-murti" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getPublishedPage("custom-murti");
+  return { title: page?.seoTitle ? { absolute: page.seoTitle } : "Custom Marble Murti Commission", description: page?.seoDescription ?? "Commission a custom hand-carved marble murti with Divine Stone Gallery's fourth-generation master moortikars in Alwar, Rajasthan.", alternates: { canonical: "/custom-murti" } };
+}
+export const dynamic = "force-dynamic";
 
 const process = [
   { number: "01", title: "Share your vision", copy: "Tell us the deity, placement, approximate dimensions and the feeling you want the finished work to carry." },
@@ -45,7 +46,7 @@ const faqItems = [
   { id: "delivery", title: "How is a large murti delivered?", content: <p>Packing and delivery are planned around the work&apos;s final dimensions, weight and destination. The available arrangement is explained before confirmation.</p> },
 ] as const;
 
-export default function CustomMurtiPage() {
+function StaticCustomMurtiPage() {
   return (
     <ToastProvider>
       <SiteHeader />
@@ -139,4 +140,9 @@ export default function CustomMurtiPage() {
       <CookieConsent />
     </ToastProvider>
   );
+}
+
+export default async function CustomMurtiPage() {
+  const page = await getPublishedPage("custom-murti");
+  return page?.sections.length ? <PublishedPageView page={page} /> : <StaticCustomMurtiPage />;
 }

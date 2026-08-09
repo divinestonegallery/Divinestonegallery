@@ -1,5 +1,6 @@
 .productCard { min-width: 0; }
 .productMedia { position: relative; overflow: hidden; aspect-ratio: 4 / 5; border-radius: var(--radius-lg); background: var(--surface-muted); }
+.productMedia > a { position: absolute; inset: 0; }
 .productMedia > a { display: block; height: 100%; }
 .productMedia img { object-fit: cover; transition: transform 500ms ease; }
 .productCard:hover .productMedia > a img { transform: scale(1.025); }

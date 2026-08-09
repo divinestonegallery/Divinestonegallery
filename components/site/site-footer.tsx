@@ -3,10 +3,15 @@ import Link from "next/link";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { brand } from "@/config/brand";
 import { getPublicBusinessDetails } from "@/config/business";
+import { getPublishedBusinessSettings } from "@/cms/public-repository";
 import styles from "./site-shell.module.css";
 
-export function SiteFooter() {
+export async function SiteFooter() {
   const business = getPublicBusinessDetails();
+  const settings = await getPublishedBusinessSettings();
+  const phone = settings.support_phone || brand.phone;
+  const email = settings.support_email || "divinestonegallery@gmail.com";
+  const address = settings.business_address || business.address || brand.location;
   return (
     <footer className={styles.siteFooter}>
       <section className={styles.newsletterSection} aria-labelledby="newsletter-title">
@@ -31,9 +36,9 @@ export function SiteFooter() {
           <Image src="/brand/logo-horizontal.jpg" alt="Divine Stone Gallery" width={420} height={225} />
           <p>{brand.promise}, shaped by generations of experience and guided by sacred tradition.</p>
           <div className={styles.footerContact}>
-            <span><MapPin aria-hidden="true" size={17} /> {business.address || brand.location}</span>
-            <a href="tel:+916376871065"><Phone aria-hidden="true" size={17} /> {brand.phone}</a>
-            <Link href="/contact"><Mail aria-hidden="true" size={17} /> Contact our gallery</Link>
+            <span><MapPin aria-hidden="true" size={17} /> {address}</span>
+            <a href={`tel:${phone.replace(/[^+\d]/g, "")}`}><Phone aria-hidden="true" size={17} /> {phone}</a>
+            <a href={`mailto:${email}`}><Mail aria-hidden="true" size={17} /> {email}</a>
             {business.gstin ? <span>GSTIN: {business.gstin}</span> : null}
           </div>
         </div>

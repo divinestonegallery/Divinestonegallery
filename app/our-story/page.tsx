@@ -18,14 +18,15 @@ import { SiteHeader } from "@/components/site/site-header";
 import { WhatsAppAssistance } from "@/components/site/whatsapp-assistance";
 import { buttonClassName } from "@/components/ui/button";
 import { ToastProvider } from "@/components/ui/toast";
+import { getPublishedPage } from "@/cms/public-repository";
+import { PublishedPageView } from "@/features/cms/published-page";
 import styles from "./our-story.module.css";
 
-export const metadata: Metadata = {
-  title: "Our Story | Four Generations of Marble Murti Craft",
-  description:
-    "Discover the family heritage behind Divine Stone Gallery, continuing the tradition of Agnihotri Moorti Art established in Alwar, Rajasthan in 1960.",
-  alternates: { canonical: "/our-story" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getPublishedPage("our-story");
+  return { title: page?.seoTitle ? { absolute: page.seoTitle } : "Our Story | Four Generations of Marble Murti Craft", description: page?.seoDescription ?? "Discover the family heritage behind Divine Stone Gallery, continuing the tradition of Agnihotri Moorti Art established in Alwar, Rajasthan in 1960.", alternates: { canonical: "/our-story" } };
+}
+export const dynamic = "force-dynamic";
 
 const values = [
   {
@@ -50,7 +51,7 @@ const values = [
   },
 ] as const;
 
-export default function OurStoryPage() {
+function StaticOurStoryPage() {
   return (
     <ToastProvider>
       <SiteHeader />
@@ -176,4 +177,9 @@ export default function OurStoryPage() {
       <CookieConsent />
     </ToastProvider>
   );
+}
+
+export default async function OurStoryPage() {
+  const page = await getPublishedPage("our-story");
+  return page?.sections.length ? <PublishedPageView page={page} /> : <StaticOurStoryPage />;
 }
