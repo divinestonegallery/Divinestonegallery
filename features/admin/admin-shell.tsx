@@ -28,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { AccountControl } from "@/features/auth/account-control";
+import { ToastProvider } from "@/components/ui/toast";
 import styles from "./admin-shell.module.css";
 
 type NavItem = {
@@ -100,7 +101,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className={styles.root}>
+    <ToastProvider><div className={styles.root}>
       <button className={`${styles.backdrop} ${menuOpen ? styles.backdropVisible : ""}`} aria-label="Close admin menu" onClick={() => setMenuOpen(false)} />
       <aside className={`${styles.sidebar} ${menuOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.brandRow}>
@@ -158,6 +159,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
         <main className={styles.main} id="admin-main" tabIndex={-1}>{children}</main>
       </div>
-    </div>
+    </div></ToastProvider>
   );
 }

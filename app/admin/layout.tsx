@@ -5,7 +5,6 @@ import { getCurrentStaffAccess } from "@/auth/admin";
 import { AdminShell } from "@/features/admin/admin-shell";
 import { AdminState } from "@/features/admin/admin-state";
 import { CustomerPageShell } from "@/features/customer/customer-page-shell";
-import { ToastProvider } from "@/components/ui/toast";
 
 export const dynamic = "force-dynamic";
 
@@ -30,5 +29,5 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     );
   }
 
-  return <ToastProvider><AdminShell>{children}</AdminShell></ToastProvider>;
+  return <AdminShell>{children}</AdminShell>;
 }
