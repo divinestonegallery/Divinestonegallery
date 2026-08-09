@@ -35,7 +35,7 @@ Seed images continue to use their existing `/public/catalog` paths. New staff up
 The initial owner allowlist is:
 
 ```text
-INITIAL_ADMIN_EMAILS=mohitks1708@gmail.com
+INITIAL_ADMIN_EMAILS=divinestonegallery@gmail.com
 ```
 
 After Clerk is activated, sign in with this verified email. The synchronous account preparation process creates the active `full_access` staff record. Additional staff invitation controls can be added when the wider admin area is built.

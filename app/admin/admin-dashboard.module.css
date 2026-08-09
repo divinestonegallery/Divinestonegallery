@@ -1,0 +1,53 @@
+.section {
+  min-height: 560px;
+  padding-block: clamp(2.5rem, 6vw, 5rem) clamp(7rem, 10vw, 9rem);
+  background: var(--surface);
+}
+
+.confirmation {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgb(33 115 72 / 0.25);
+  border-radius: var(--radius-lg);
+  color: var(--success);
+  background: rgb(33 115 72 / 0.07);
+}
+
+.confirmation div { display: grid; gap: 0.15rem; }
+.confirmation strong { font-size: 0.82rem; }
+.confirmation span { color: var(--ink-muted); font-size: 0.68rem; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.card {
+  position: relative;
+  display: grid;
+  min-height: 250px;
+  grid-template-rows: auto 1fr;
+  gap: 2rem;
+  padding: 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: inherit;
+  background: var(--background);
+  text-decoration: none;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.card:hover { border-color: var(--gold-deep); transform: translateY(-2px); }
+.card > svg:first-child { color: var(--gold-deep); stroke-width: 1.5; }
+.card h2 { margin: 0; font-size: 2rem; font-weight: 400; }
+.card p { margin: 0.65rem 2rem 0 0; color: var(--ink-muted); font-size: 0.72rem; line-height: 1.65; }
+.arrow { position: absolute; right: 1.2rem; bottom: 1.25rem; color: var(--gold-deep); }
+
+@media (max-width: 850px) {
+  .grid { grid-template-columns: 1fr; }
+  .card { min-height: 190px; }
+}
