@@ -52,11 +52,11 @@ const groups: Array<{ label: string; items: NavItem[] }> = [
   {
     label: "Commerce",
     items: [
-      { label: "Orders", icon: ShoppingBag, description: "Orders, payments and fulfilment" },
-      { label: "Customers", icon: UsersRound, description: "Customer accounts and activity" },
-      { label: "Shipping", icon: Truck, description: "Shiprocket rates and tracking" },
-      { label: "Payments", icon: CircleDollarSign, description: "Online, bank transfer and COD" },
-      { label: "Returns", icon: PackageSearch, description: "Damage reports and resolutions" },
+      { label: "Orders", href: "/admin/orders", icon: ShoppingBag, description: "Orders, payments and fulfilment" },
+      { label: "Customers", href: "/admin/customers", icon: UsersRound, description: "Customer accounts and activity" },
+      { label: "Shipping", href: "/admin/shipping", icon: Truck, description: "Shiprocket rates and tracking" },
+      { label: "Payments", href: "/admin/payments", icon: CircleDollarSign, description: "Online, bank transfer and COD" },
+      { label: "Returns", href: "/admin/returns", icon: PackageSearch, description: "Damage reports and resolutions" },
     ],
   },
   {
@@ -79,7 +79,7 @@ const groups: Array<{ label: string; items: NavItem[] }> = [
 
 function currentLabel(pathname: string) {
   return groups.flatMap((group) => group.items).find((item) => item.href === pathname)?.label
-    ?? (pathname.startsWith("/admin/products") ? "Products" : pathname.startsWith("/admin/catalog") ? "Catalogue" : pathname.startsWith("/admin/inventory") ? "Inventory" : pathname.startsWith("/admin/commissions") ? "Commissions" : pathname.startsWith("/admin/notifications") ? "Notifications" : "Administration");
+    ?? (pathname.split("/")[2] ? pathname.split("/")[2].replaceAll("-", " ").replace(/^./, (letter) => letter.toUpperCase()) : "Administration");
 }
 
 export function AdminShell({ children }: { children: ReactNode }) {
