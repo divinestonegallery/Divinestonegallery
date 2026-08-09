@@ -225,6 +225,23 @@
 
 .editorGrid .checkbox input { width: 18px; min-height: 18px; }
 
+.collectionChooser {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+  margin: 0;
+  padding: .85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.collectionChooser legend { padding-inline: .35rem; color: var(--ink-muted); font-size: .64rem; font-weight: 700; }
+.collectionChooser label { display: inline-flex; min-height: 34px; align-items: center; gap: .4rem; padding-inline: .65rem; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--background); }
+.collectionChooser label input { width: 16px; min-height: 16px; }
+.collectionChooser label span,
+.collectionChooser small { color: var(--ink-muted); font-size: .64rem; }
+
 .editorActions {
   display: flex;
   flex-wrap: wrap;

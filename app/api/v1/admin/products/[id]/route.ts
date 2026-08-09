@@ -1,5 +1,5 @@
 import { authorizeStaff } from "@/auth/authorization";
-import { getAdminProduct, ProductPatch, updateAdminProduct } from "@/catalog/admin-repository";
+import { getAdminProduct, ProductPatch, setAdminProductCollections, updateAdminProduct } from "@/catalog/admin-repository";
 import { enumValue, optionalInteger, optionalString, readJsonObject, requiredString, slugValue } from "@/catalog/input";
 
 export const dynamic = "force-dynamic";
@@ -35,11 +35,24 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if ("seoTitle" in body) patch.seoTitle = optionalString(body.seoTitle, 180);
   if ("seoDescription" in body) patch.seoDescription = optionalString(body.seoDescription, 320);
 
-  if (!Object.keys(patch).length) return Response.json({ error: { code: "EMPTY_UPDATE", message: "No valid changes were supplied." } }, { status: 400 });
+  let collectionIds: string[] | undefined;
+  if ("collectionIds" in body) {
+    if (!Array.isArray(body.collectionIds) || body.collectionIds.some((value) => typeof value !== "string" || !value.trim())) {
+      return Response.json({ error: { code: "INVALID_COLLECTIONS", message: "Collections must be a list of valid collection IDs." } }, { status: 400 });
+    }
+    collectionIds = [...new Set(body.collectionIds.map((value) => value.trim()))].slice(0, 30);
+  }
+
+  if (!Object.keys(patch).length && collectionIds === undefined) return Response.json({ error: { code: "EMPTY_UPDATE", message: "No valid changes were supplied." } }, { status: 400 });
 
   const { id } = await params;
   try {
-    const item = await updateAdminProduct(id, patch, authorization.userId);
+    let item = Object.keys(patch).length
+      ? await updateAdminProduct(id, patch, authorization.userId)
+      : await getAdminProduct(id);
+    if (item && collectionIds !== undefined) {
+      item = await setAdminProductCollections(id, collectionIds, authorization.userId);
+    }
     return item
       ? Response.json({ data: item })
       : Response.json({ error: { code: "PRODUCT_NOT_FOUND", message: "Product not found." } }, { status: 404 });

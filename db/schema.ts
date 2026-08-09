@@ -167,6 +167,24 @@ export const deities = pgTable(
   (table) => [uniqueIndex("deities_slug_unique").on(table.slug)],
 );
 
+export const collections = pgTable(
+  "collections",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").notNull().default(true),
+    isFeatured: boolean("is_featured").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("collections_slug_unique").on(table.slug),
+    index("collections_browse_idx").on(table.isActive, table.sortOrder),
+  ],
+);
+
 export const products = pgTable(
   "products",
   {
@@ -226,6 +244,7 @@ export const productVariants = pgTable(
       .notNull()
       .default("repeatable"),
     stockQuantity: integer("stock_quantity").notNull().default(0),
+    lowStockThreshold: integer("low_stock_threshold").notNull().default(1),
     codEligible: boolean("cod_eligible").notNull().default(true),
     shippingClass: text("shipping_class").notNull().default("marble_sculpture"),
     isActive: boolean("is_active").notNull().default(true),
@@ -245,6 +264,10 @@ export const productVariants = pgTable(
     ),
     check("product_variants_stock_nonnegative", sql`${table.stockQuantity} >= 0`),
     check(
+      "product_variants_low_stock_threshold_nonnegative",
+      sql`${table.lowStockThreshold} >= 0`,
+    ),
+    check(
       "product_variants_price_nonnegative",
       sql`${table.pricePaise} is null or ${table.pricePaise} >= 0`,
     ),
@@ -252,6 +275,23 @@ export const productVariants = pgTable(
       "product_variants_gst_rate_valid",
       sql`${table.gstRateBps} is null or (${table.gstRateBps} >= 0 and ${table.gstRateBps} <= 10000)`,
     ),
+  ],
+);
+
+export const productCollections = pgTable(
+  "product_collections",
+  {
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    collectionId: text("collection_id")
+      .notNull()
+      .references(() => collections.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.productId, table.collectionId] }),
+    index("product_collections_collection_idx").on(table.collectionId, table.sortOrder),
   ],
 );
 

@@ -17,15 +17,18 @@ export function parseNewVariant(body: JsonObject): ParseResult<NewVariant> {
   const packageHeightMm = optionalInteger(body.packageHeightMm, 1);
   const pricePaise = optionalInteger(body.pricePaise, 0);
   const gstRateBps = optionalInteger(body.gstRateBps, 0);
-  const stockQuantity = optionalInteger(body.stockQuantity, 0) ?? 0;
+  const parsedStockQuantity = optionalInteger(body.stockQuantity, 0);
+  const parsedLowStockThreshold = optionalInteger(body.lowStockThreshold, 0);
+  const stockQuantity = parsedStockQuantity ?? 0;
+  const lowStockThreshold = parsedLowStockThreshold ?? 1;
   const inventoryKind = enumValue(body.inventoryKind, ["unique", "repeatable"] as const) ?? "repeatable";
   const codEligible = typeof body.codEligible === "boolean" ? body.codEligible : true;
 
   if (!sku || !name || !material || !heightMm) return { error: "SKU, variant name, material and height are required." };
-  if (widthMm === undefined || depthMm === undefined || weightGrams === undefined || packageLengthMm === undefined || packageWidthMm === undefined || packageHeightMm === undefined || pricePaise === undefined || gstRateBps === undefined) return { error: "A numeric variant value is invalid." };
+  if (widthMm === undefined || depthMm === undefined || weightGrams === undefined || packageLengthMm === undefined || packageWidthMm === undefined || packageHeightMm === undefined || pricePaise === undefined || gstRateBps === undefined || parsedStockQuantity === undefined || parsedLowStockThreshold === undefined) return { error: "A numeric variant value is invalid." };
   if (gstRateBps !== null && gstRateBps > 10000) return { error: "GST rate cannot exceed 100%." };
 
-  return { value: { sku, name, material, finish, heightMm, widthMm, depthMm, weightGrams, packageLengthMm, packageWidthMm, packageHeightMm, pricePaise, gstRateBps, inventoryKind, stockQuantity, codEligible } };
+  return { value: { sku, name, material, finish, heightMm, widthMm, depthMm, weightGrams, packageLengthMm, packageWidthMm, packageHeightMm, pricePaise, gstRateBps, inventoryKind, stockQuantity, lowStockThreshold, codEligible } };
 }
 
 export function parseVariantPatch(body: JsonObject): ParseResult<VariantPatch> {
@@ -40,12 +43,12 @@ export function parseVariantPatch(body: JsonObject): ParseResult<VariantPatch> {
   }
   if ("finish" in body) patch.finish = optionalString(body.finish, 160);
 
-  const numberFields = ["heightMm", "widthMm", "depthMm", "weightGrams", "packageLengthMm", "packageWidthMm", "packageHeightMm", "pricePaise", "gstRateBps", "stockQuantity"] as const;
+  const numberFields = ["heightMm", "widthMm", "depthMm", "weightGrams", "packageLengthMm", "packageWidthMm", "packageHeightMm", "pricePaise", "gstRateBps", "stockQuantity", "lowStockThreshold"] as const;
   for (const field of numberFields) {
     if (field in body) {
-      const minimum = field === "pricePaise" || field === "gstRateBps" || field === "stockQuantity" ? 0 : 1;
+      const minimum = field === "pricePaise" || field === "gstRateBps" || field === "stockQuantity" || field === "lowStockThreshold" ? 0 : 1;
       const value = optionalInteger(body[field], minimum);
-      if (value === undefined || ((field === "heightMm" || field === "stockQuantity") && value === null)) return { error: `${field} is invalid.` };
+      if (value === undefined || ((field === "heightMm" || field === "stockQuantity" || field === "lowStockThreshold") && value === null)) return { error: `${field} is invalid.` };
       if (field === "heightMm") patch.heightMm = value!;
       if (field === "widthMm") patch.widthMm = value;
       if (field === "depthMm") patch.depthMm = value;
@@ -56,6 +59,7 @@ export function parseVariantPatch(body: JsonObject): ParseResult<VariantPatch> {
       if (field === "pricePaise") patch.pricePaise = value;
       if (field === "gstRateBps") patch.gstRateBps = value;
       if (field === "stockQuantity") patch.stockQuantity = value!;
+      if (field === "lowStockThreshold") patch.lowStockThreshold = value!;
     }
   }
   if (patch.gstRateBps !== undefined && patch.gstRateBps !== null && patch.gstRateBps > 10000) return { error: "GST rate cannot exceed 100%." };

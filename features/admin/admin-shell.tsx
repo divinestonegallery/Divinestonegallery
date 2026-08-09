@@ -43,6 +43,8 @@ const groups: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { label: "Overview", href: "/admin", icon: LayoutDashboard, description: "Store health and quick actions" },
       { label: "Products", href: "/admin/products", icon: Boxes, description: "Catalogue, pricing and inventory" },
+      { label: "Catalogue", href: "/admin/catalog", icon: Tags, description: "Categories, deities and collections" },
+      { label: "Inventory", href: "/admin/inventory", icon: PackageSearch, description: "Stock, reservations and low-stock alerts" },
       { label: "Commissions", href: "/admin/commissions", icon: Hammer, description: "Quotes, milestones and approvals" },
       { label: "Notifications", href: "/admin/notifications", icon: BellRing, description: "Email, SMS and WhatsApp queue" },
     ],
@@ -77,7 +79,7 @@ const groups: Array<{ label: string; items: NavItem[] }> = [
 
 function currentLabel(pathname: string) {
   return groups.flatMap((group) => group.items).find((item) => item.href === pathname)?.label
-    ?? (pathname.startsWith("/admin/products") ? "Products" : pathname.startsWith("/admin/commissions") ? "Commissions" : pathname.startsWith("/admin/notifications") ? "Notifications" : "Administration");
+    ?? (pathname.startsWith("/admin/products") ? "Products" : pathname.startsWith("/admin/catalog") ? "Catalogue" : pathname.startsWith("/admin/inventory") ? "Inventory" : pathname.startsWith("/admin/commissions") ? "Commissions" : pathname.startsWith("/admin/notifications") ? "Notifications" : "Administration");
 }
 
 export function AdminShell({ children }: { children: ReactNode }) {

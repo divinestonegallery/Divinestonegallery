@@ -25,6 +25,7 @@ type Variant = {
   gstRateBps: number | null;
   inventoryKind: "unique" | "repeatable";
   stockQuantity: number;
+  lowStockThreshold: number;
   codEligible: boolean;
   isActive: boolean;
 };
@@ -44,12 +45,13 @@ type AdminProduct = {
   sortOrder: number;
   variants: Variant[];
   media: Array<{ id: string; publicPath: string | null; altText: string | null; isPrimary: boolean }>;
+  collections: Array<{ id: string; name: string; slug: string }>;
 };
 
 type Lookup = { id: string; name: string };
 type CatalogResponse = {
   data: AdminProduct[];
-  lookups: { categories: Lookup[]; deities: Lookup[] };
+  lookups: { categories: Lookup[]; deities: Lookup[]; collections: Lookup[] };
 };
 
 function completion(product: AdminProduct) {
@@ -65,13 +67,16 @@ function completion(product: AdminProduct) {
   return { complete: checks.filter(Boolean).length, total: checks.length };
 }
 
-function ProductEditor({ product, refresh }: { product: AdminProduct; refresh: () => Promise<void> }) {
+function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; lookups: CatalogResponse["lookups"]; refresh: () => Promise<void> }) {
   const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState(product.status);
   const [salesMode, setSalesMode] = useState(product.salesMode);
   const [featured, setFeatured] = useState(product.isFeatured);
   const [sortOrder, setSortOrder] = useState(String(product.sortOrder));
+  const [categoryId, setCategoryId] = useState(product.categoryId ?? "");
+  const [deityId, setDeityId] = useState(product.deityId ?? "");
+  const [collectionIds, setCollectionIds] = useState(product.collections.map((collection) => collection.id));
   const variant = product.variants[0];
   const [priceRupees, setPriceRupees] = useState(variant?.pricePaise ? String(variant.pricePaise / 100) : "");
   const [gstPercent, setGstPercent] = useState(variant?.gstRateBps ? String(variant.gstRateBps / 100) : "");
@@ -91,7 +96,7 @@ function ProductEditor({ product, refresh }: { product: AdminProduct; refresh: (
       const response = await fetch(`/api/v1/admin/products/${encodeURIComponent(product.id)}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ status, salesMode, isFeatured: featured, sortOrder: Number(sortOrder) }),
+        body: JSON.stringify({ status, salesMode, isFeatured: featured, sortOrder: Number(sortOrder), categoryId: categoryId || null, deityId: deityId || null, collectionIds }),
       });
       if (!response.ok) throw new Error();
 
@@ -161,6 +166,8 @@ function ProductEditor({ product, refresh }: { product: AdminProduct; refresh: (
       <div className={styles.editorGrid}>
         <label><span>Status</span><select value={status} onChange={(event) => setStatus(event.target.value as typeof status)}><option value="draft">Draft</option><option value="active">Active</option><option value="archived">Archived</option></select></label>
         <label><span>Sales mode</span><select value={salesMode} onChange={(event) => setSalesMode(event.target.value as typeof salesMode)}><option value="both">Buy + quote</option><option value="direct">Direct purchase</option><option value="quote">Quote only</option></select></label>
+        <label><span>Category</span><select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">Uncategorised</option>{lookups.categories.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
+        <label><span>Deity</span><select value={deityId} onChange={(event) => setDeityId(event.target.value)}><option value="">No deity</option>{lookups.deities.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
         <label><span>Price before GST (₹)</span><input inputMode="decimal" value={priceRupees} onChange={(event) => setPriceRupees(event.target.value)} placeholder="Not entered" /></label>
         <label><span>GST rate (%)</span><input inputMode="decimal" value={gstPercent} onChange={(event) => setGstPercent(event.target.value)} placeholder="Add after GST registration" /></label>
         <label><span>Weight (kg)</span><input inputMode="decimal" value={weightKg} onChange={(event) => setWeightKg(event.target.value)} placeholder="Needed for shipping" /></label>
@@ -172,6 +179,7 @@ function ProductEditor({ product, refresh }: { product: AdminProduct; refresh: (
         <label><span>Stock quantity</span><input inputMode="numeric" value={stock} onChange={(event) => setStock(event.target.value)} /></label>
         <label><span>Display order</span><input inputMode="numeric" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)} /></label>
         <label className={styles.checkbox}><input type="checkbox" checked={featured} onChange={(event) => setFeatured(event.target.checked)} /><span>Featured product</span></label>
+        <fieldset className={styles.collectionChooser}><legend>Curated collections</legend>{lookups.collections.length ? lookups.collections.map((item) => <label key={item.id}><input type="checkbox" checked={collectionIds.includes(item.id)} onChange={(event) => setCollectionIds((current) => event.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id))} /><span>{item.name}</span></label>) : <small>Create a collection from Catalogue first.</small>}</fieldset>
       </div>
       <div className={styles.editorActions}>
         <Link href={`/products/${product.slug}`} target="_blank">View product <ExternalLink aria-hidden="true" size={14} /></Link>
@@ -264,7 +272,7 @@ export function CatalogAdmin() {
         ) : null}
 
         <div className={styles.summary}><strong>{items.length}</strong><span>{loading ? "Loading catalogue…" : "catalogue products"}</span><small>Products stay quote-only until price, GST, stock, dimensions and weight are complete.</small></div>
-        <div className={styles.productList}>{items.map((product) => <ProductEditor key={product.id} product={product} refresh={load} />)}</div>
+        <div className={styles.productList}>{items.map((product) => <ProductEditor key={product.id} product={product} lookups={payload?.lookups ?? { categories: [], deities: [], collections: [] }} refresh={load} />)}</div>
       </div>
     </section>
   );

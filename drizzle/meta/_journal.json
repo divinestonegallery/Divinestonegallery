@@ -15,6 +15,13 @@
       "when": 1786222371178,
       "tag": "0001_seed_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786274065027,
+      "tag": "0002_watery_the_hunter",
+      "breakpoints": true
     }
   ]
 }

@@ -2,9 +2,11 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import {
   auditLogs,
   categories,
+  collections,
   deities,
   mediaAssets,
   productMedia,
+  productCollections,
   products,
   productVariants,
 } from "@/db/schema";
@@ -57,11 +59,23 @@ export async function listAdminProducts() {
     .from(productMedia)
     .innerJoin(mediaAssets, eq(productMedia.mediaAssetId, mediaAssets.id))
     .orderBy(asc(productMedia.productId), asc(productMedia.sortOrder));
+  const collectionRows = await db
+    .select({
+      productId: productCollections.productId,
+      id: collections.id,
+      name: collections.name,
+      slug: collections.slug,
+      sortOrder: productCollections.sortOrder,
+    })
+    .from(productCollections)
+    .innerJoin(collections, eq(productCollections.collectionId, collections.id))
+    .orderBy(asc(productCollections.productId), asc(productCollections.sortOrder));
 
   return productRows.map((product) => ({
     ...product,
     variants: variantRows.filter((variant) => variant.productId === product.id),
     media: mediaRows.filter((media) => media.productId === product.id),
+    collections: collectionRows.filter((collection) => collection.productId === product.id),
   }));
 }
 
@@ -163,6 +177,7 @@ export type NewVariant = {
   gstRateBps: number | null;
   inventoryKind: "unique" | "repeatable";
   stockQuantity: number;
+  lowStockThreshold: number;
   codEligible: boolean;
 };
 
@@ -225,9 +240,34 @@ export async function updateAdminVariant(
 
 export async function listCatalogLookups() {
   const db = await database();
-  const [categoryRows, deityRows] = await Promise.all([
+  const [categoryRows, deityRows, collectionRows] = await Promise.all([
     db.select().from(categories).where(eq(categories.isActive, true)).orderBy(asc(categories.sortOrder)),
     db.select().from(deities).where(eq(deities.isActive, true)).orderBy(asc(deities.sortOrder)),
+    db.select().from(collections).where(eq(collections.isActive, true)).orderBy(asc(collections.sortOrder)),
   ]);
-  return { categories: categoryRows, deities: deityRows };
+  return { categories: categoryRows, deities: deityRows, collections: collectionRows };
+}
+
+export async function setAdminProductCollections(
+  productId: string,
+  collectionIds: string[],
+  actorUserId: string,
+) {
+  const db = await database();
+  const statements = [
+    db.delete(productCollections).where(eq(productCollections.productId, productId)),
+    ...collectionIds.map((collectionId, sortOrder) =>
+      db.insert(productCollections).values({ productId, collectionId, sortOrder }),
+    ),
+    db.insert(auditLogs).values({
+      id: crypto.randomUUID(),
+      actorUserId,
+      action: "product.collections_updated",
+      entityType: "product",
+      entityId: productId,
+      changesJson: JSON.stringify({ collectionIds }),
+    }),
+  ];
+  await db.batch(statements as unknown as Parameters<typeof db.batch>[0]);
+  return getAdminProduct(productId);
 }
