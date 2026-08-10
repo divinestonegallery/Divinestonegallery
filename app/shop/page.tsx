@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/shop" },
 };
 
+// Catalogue changes made in Admin must be visible on the next storefront request.
+export const dynamic = "force-dynamic";
+
 export default async function ShopPage() {
   const products = await getPublicCatalog();
   return (

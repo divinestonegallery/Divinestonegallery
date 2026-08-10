@@ -90,6 +90,38 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
   const readiness = completion(product);
   const primaryMedia = product.media.find((media) => media.isPrimary) ?? product.media[0];
 
+  async function createFirstVariant(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const heightCm = Number(form.get("heightCm"));
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/v1/admin/products/${encodeURIComponent(product.id)}/variants`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          sku: form.get("sku"),
+          name: form.get("variantName"),
+          material: form.get("material"),
+          finish: form.get("finish"),
+          heightMm: Number.isFinite(heightCm) ? Math.round(heightCm * 10) : null,
+          inventoryKind: "unique",
+          stockQuantity: 0,
+          lowStockThreshold: 1,
+          codEligible: true,
+        }),
+      });
+      if (!response.ok) throw new Error();
+      showToast(`Selling details added to ${product.name}.`);
+      await refresh();
+    } catch {
+      showToast("Could not add selling details. Check that the SKU is unique and all required values are complete.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function saveProduct() {
     setSaving(true);
     try {
@@ -183,10 +215,21 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
       </div>
       <div className={styles.editorActions}>
         <Link href={`/products/${product.slug}`} target="_blank">View product <ExternalLink aria-hidden="true" size={14} /></Link>
-        <span>{variant ? `${variant.sku} · ${variant.heightMm} mm` : "Add a variant through the API before publishing."}</span>
+        <span>{variant ? `${variant.sku} · ${variant.heightMm} mm` : "Add the first selling details before publishing."}</span>
         <label className={styles.uploadButton}><Upload aria-hidden="true" size={15} /> Add image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={saving} onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadImage(file); event.currentTarget.value = ""; }} /></label>
-        <button type="button" disabled={saving || !variant} onClick={saveProduct}><Save aria-hidden="true" size={16} /> {saving ? "Saving…" : "Save changes"}</button>
+        <button type="button" disabled={saving} onClick={saveProduct}><Save aria-hidden="true" size={16} /> {saving ? "Saving…" : "Save changes"}</button>
       </div>
+      {!variant ? (
+        <form className={styles.createForm} onSubmit={createFirstVariant}>
+          <h3 className="font-display">Add selling details</h3>
+          <label><span>SKU</span><input name="sku" required maxLength={100} placeholder="DSG-GANESHA-24" /></label>
+          <label><span>Variant name</span><input name="variantName" required maxLength={160} placeholder="Standard" /></label>
+          <label><span>Material</span><input name="material" required maxLength={160} placeholder="Makrana white marble" /></label>
+          <label><span>Finish</span><input name="finish" maxLength={160} placeholder="Natural white or hand-painted" /></label>
+          <label><span>Height (cm)</span><input name="heightCm" required inputMode="decimal" min="0.1" step="0.1" placeholder="60.9" /></label>
+          <button type="submit" disabled={saving}>{saving ? "Adding…" : "Add selling details"}</button>
+        </form>
+      ) : null}
     </details>
   );
 }
@@ -237,14 +280,15 @@ export function CatalogAdmin() {
 
   async function createProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const response = await fetch("/api/v1/admin/products", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(Object.fromEntries(form)),
     });
     if (!response.ok) { showToast("The draft product could not be created."); return; }
-    event.currentTarget.reset();
+    formElement.reset();
     setShowCreate(false);
     showToast("Draft product created.");
     await load();

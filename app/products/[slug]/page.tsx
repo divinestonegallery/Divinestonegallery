@@ -24,18 +24,14 @@ import {
   getPublicCatalogItem,
   getRelatedPublicCatalogItems,
 } from "@/catalog/repository";
-import {
-  catalogItems,
-} from "@/features/catalog/catalog-data";
 import { ProductActions } from "@/features/catalog/product-actions";
 import { ProductGallery } from "@/features/catalog/product-gallery";
 import styles from "./product-page.module.css";
 
 type ProductPageProps = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  return catalogItems.map((item) => ({ slug: item.slug }));
-}
+// New and updated products are resolved from PostgreSQL at request time.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;

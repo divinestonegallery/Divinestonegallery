@@ -19,7 +19,7 @@ import { AccountControl } from "@/features/auth/account-control";
 import { useEnquiryBag, useSavedWorks } from "@/features/customer/device-collections";
 import styles from "./site-shell.module.css";
 
-const deityLinks = [
+const defaultDeityLinks = [
   ["Ganesha", "/shop?q=Ganesha"],
   ["Radha Krishna", "/shop?q=Radha%20Krishna"],
   ["Shiva", "/shop?q=Shiva"],
@@ -58,6 +58,7 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [logoAnimationFinished, setLogoAnimationFinished] = useState(false);
+  const [deityLinks, setDeityLinks] = useState<ReadonlyArray<readonly [string, string]>>(defaultDeityLinks);
   const logoVideoRef = useRef<HTMLVideoElement>(null);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const searchTriggerRef = useRef<HTMLButtonElement>(null);
@@ -68,6 +69,24 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
   useEffect(() => {
     if (animateLogo && logoVideoRef.current) logoVideoRef.current.playbackRate = 2.5;
   }, [animateLogo]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/v1/products?limit=100", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((payload: { data?: Array<{ deity?: string }> }) => {
+        if (cancelled) return;
+        const names = [...new Set((payload.data ?? []).map((item) => item.deity?.trim()).filter((name): name is string => Boolean(name)))];
+        if (names.length) {
+          setDeityLinks([
+            ...names.slice(0, 8).map((name) => [name, `/shop?q=${encodeURIComponent(name)}`] as const),
+            ["View all deities", "/shop"],
+          ]);
+        }
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const overlayOpen = mobileMenuOpen || searchOpen;

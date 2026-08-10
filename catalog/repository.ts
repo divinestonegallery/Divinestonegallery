@@ -97,9 +97,9 @@ async function readDatabaseCatalog(): Promise<CatalogItem[]> {
 }
 
 export async function getPublicCatalog(): Promise<CatalogItem[]> {
+  if (!process.env.DATABASE_URL?.trim()) return catalogItems;
   try {
-    const items = await readDatabaseCatalog();
-    return items.length ? items : catalogItems;
+    return await readDatabaseCatalog();
   } catch {
     return catalogItems;
   }
