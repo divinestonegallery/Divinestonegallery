@@ -15,12 +15,92 @@
     linear-gradient(180deg, #fbf8f2 0%, var(--background) 100%);
 }
 
+.videoHero {
+  position: relative;
+  isolation: isolate;
+  min-height: clamp(680px, calc(100svh - 108px), 920px);
+  padding-top: 0;
+  color: #fffaf1;
+  background: #21180f url("/brand/home-hero-poster.jpg") center / cover no-repeat;
+}
+
+.heroVideo {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.heroVeil {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgb(15 11 8 / 0.88) 0%, rgb(21 15 10 / 0.68) 38%, rgb(21 15 10 / 0.17) 72%, rgb(17 12 8 / 0.3) 100%),
+    linear-gradient(0deg, rgb(13 9 6 / 0.82) 0%, rgb(13 9 6 / 0.08) 58%, rgb(13 9 6 / 0.3) 100%);
+}
+
 .heroInner {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
   min-height: min(720px, 74vh);
   align-items: center;
   gap: clamp(2rem, 6vw, 6rem);
+}
+
+.videoHero .heroInner {
+  display: flex;
+  min-height: inherit;
+  align-items: flex-end;
+}
+
+.videoHero .heroCopy {
+  max-width: min(790px, 65vw);
+  padding-block: clamp(7rem, 15vh, 11rem) clamp(4.5rem, 9vh, 7rem);
+  text-shadow: 0 2px 28px rgb(0 0 0 / 0.24);
+}
+
+.videoHero .eyebrow {
+  color: #e1bb77;
+  letter-spacing: 0.18em;
+}
+
+.videoHero .heroCopy h1 {
+  max-width: 780px;
+  color: #fffaf1;
+}
+
+.videoHero .heroCopy h1 span {
+  color: #f1c77e;
+}
+
+.videoHero .heroLead {
+  color: #fff8ed;
+  opacity: 0.86;
+}
+
+.videoHero .heroActions a:first-child {
+  color: #21180f;
+  background: #fffaf1;
+}
+
+.videoHero .heroActions a:last-child {
+  border-color: rgb(255 250 241 / 0.72);
+  color: #fffaf1;
+  background: rgb(20 14 9 / 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.videoHero .heroProof {
+  color: #fff8ed;
+  opacity: 0.82;
+}
+
+.videoHero .heroProof svg {
+  color: #e1bb77;
 }
 
 .heroCopy {
@@ -628,6 +708,11 @@
     padding-block: 1.5rem 0;
   }
 
+  .videoHero .heroCopy {
+    max-width: 84%;
+    padding-block: 8rem 5rem;
+  }
+
   .heroVisual {
     min-height: 650px;
   }
@@ -678,6 +763,33 @@
 @media (max-width: 680px) {
   .hero {
     padding-top: 2rem;
+  }
+
+  .videoHero {
+    min-height: min(760px, calc(100svh - 76px));
+    padding-top: 0;
+  }
+
+  .videoHero .heroCopy {
+    max-width: 100%;
+    padding-block: 8rem 4.5rem;
+  }
+
+  .videoHero .heroCopy h1 {
+    max-width: 94%;
+  }
+
+  .videoHero .heroLead {
+    max-width: 95%;
+    line-height: 1.62;
+  }
+
+  .videoHero .heroVideo {
+    object-position: 58% center;
+  }
+
+  .videoHero .heroVeil {
+    background: linear-gradient(0deg, rgb(13 9 6 / 0.9) 0%, rgb(13 9 6 / 0.47) 58%, rgb(13 9 6 / 0.18) 100%);
   }
 
   .heroCopy h1 {
@@ -809,6 +921,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .heroVideo {
+    visibility: hidden;
+  }
+
   .cardArrow {
     transition: none;
   }

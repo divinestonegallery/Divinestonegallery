@@ -118,7 +118,21 @@ function StaticHome() {
     <ToastProvider>
       <SiteHeader animateLogo />
       <main id="main-content" tabIndex={-1}>
-        <section className={styles.hero}>
+        <section className={`${styles.hero} ${styles.videoHero}`}>
+          <video
+            className={styles.heroVideo}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            poster="/brand/home-hero-poster.jpg"
+            aria-hidden="true"
+            tabIndex={-1}
+          >
+            <source src="/brand/home-hero.mp4" type="video/mp4" />
+          </video>
+          <span className={styles.heroVeil} aria-hidden="true" />
           <div className={`${styles.heroInner} site-container`}>
             <div className={styles.heroCopy}>
               <p className={styles.eyebrow}>From Alwar, Rajasthan · Since 1960</p>
@@ -143,30 +157,14 @@ function StaticHome() {
               </div>
             </div>
 
-            <div className={styles.heroVisual}>
-              <div className={styles.heroImageFrame}>
-                <Image
-                  src="/catalog/radha-krishna-39.jpg"
-                  alt="Hand-carved Radha Krishna marble moorties with gold and pastel detailing"
-                  fill
-                  priority
-                  sizes="(max-width: 900px) 100vw, 50vw"
-                />
-              </div>
-              <div className={styles.heroImageNote}>
-                <span>Featured work</span>
-                <strong className="font-display">39-inch Radha Krishna</strong>
-                <small>Hand-carved and hand-painted</small>
-              </div>
-            </div>
-          </div>
-          <div className={`${styles.trustBar} site-container`}>
-            <div><strong>1960</strong><span>Family legacy established</span></div>
-            <div><strong>4th</strong><span>Generation of moortikars</span></div>
-            <div><strong>Shilp Shastra</strong><span>Sacred proportions respected</span></div>
-            <div><strong>India-wide</strong><span>Protective crated delivery</span></div>
           </div>
         </section>
+        <div className={`${styles.trustBar} site-container`}>
+          <div><strong>1960</strong><span>Family legacy established</span></div>
+          <div><strong>4th</strong><span>Generation of moortikars</span></div>
+          <div><strong>Shilp Shastra</strong><span>Sacred proportions respected</span></div>
+          <div><strong>India-wide</strong><span>Protective crated delivery</span></div>
+        </div>
 
         <section className={styles.collectionSection}>
           <div className="site-container">

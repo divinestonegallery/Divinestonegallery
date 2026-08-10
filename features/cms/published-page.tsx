@@ -31,13 +31,44 @@ function items(section: PublishedSection) {
 }
 function action(label: string | null, href: string | null, secondary = false) { return label && href ? <Link className={secondary ? styles.secondary : styles.primary} href={href}>{label}<ArrowRight size={15} /></Link> : null; }
 
-function Block({ section, first }: { section: PublishedSection; first: boolean }) {
+function Block({ section, first, homeHero }: { section: PublishedSection; first: boolean; homeHero: boolean }) {
   const rows = items(section); const image = section.mediaPath ?? fallbackImages[section.sectionKey] ?? (first ? fallbackImages.hero : null);
-  if (section.blockType === "hero") return <section className={styles.hero} data-tone={section.styleVariant}><div className="site-container"><div className={styles.heroCopy}><small>{section.eyebrow}</small><h1 className="font-display">{section.heading}</h1><p>{section.body}</p><div className={styles.actions}>{action(section.ctaLabel, section.ctaHref)}{action(section.secondaryCtaLabel, section.secondaryCtaHref, true)}</div><span className={styles.proof}><Sparkles size={16} />Fourth-generation marble atelier · Alwar, Rajasthan</span></div>{image ? <div className={styles.heroImage}><Image src={image} alt={section.mediaAltText ?? section.heading ?? "Divine Stone Gallery marble moorti"} fill loading="eager" sizes="(max-width: 850px) 100vw, 48vw" /></div> : null}</div></section>;
+  if (section.blockType === "hero") return (
+    <section className={`${styles.hero} ${homeHero ? styles.videoHero : ""}`} data-tone={section.styleVariant}>
+      {homeHero ? (
+        <>
+          <video
+            className={styles.heroVideo}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            poster="/brand/home-hero-poster.jpg"
+            aria-hidden="true"
+            tabIndex={-1}
+          >
+            <source src="/brand/home-hero.mp4" type="video/mp4" />
+          </video>
+          <span className={styles.heroVeil} aria-hidden="true" />
+        </>
+      ) : null}
+      <div className="site-container">
+        <div className={styles.heroCopy}>
+          <small>{section.eyebrow}</small>
+          <h1 className="font-display">{section.heading}</h1>
+          <p>{section.body}</p>
+          <div className={styles.actions}>{action(section.ctaLabel, section.ctaHref)}{action(section.secondaryCtaLabel, section.secondaryCtaHref, true)}</div>
+          <span className={styles.proof}><Sparkles size={16} />Fourth-generation marble atelier · Alwar, Rajasthan</span>
+        </div>
+        {!homeHero && image ? <div className={styles.heroImage}><Image src={image} alt={section.mediaAltText ?? section.heading ?? "Divine Stone Gallery marble moorti"} fill loading="eager" sizes="(max-width: 850px) 100vw, 48vw" /></div> : null}
+      </div>
+    </section>
+  );
   if (section.blockType === "collection" || section.blockType === "feature_grid" || section.blockType === "faq") return <section className={styles.section} data-tone={section.styleVariant}><div className="site-container"><header className={styles.heading}><div><small>{section.eyebrow}</small><h2 className="font-display">{section.heading}</h2></div><p>{section.body}</p></header><div className={section.blockType === "faq" ? styles.faq : styles.cards}>{rows.map((item, index) => { const content = <>{item.image ? <span className={styles.cardImage}><Image src={item.image} alt={item.title ?? ""} fill sizes="(max-width: 700px) 50vw, 25vw" /></span> : null}<strong className="font-display">{item.title}</strong><p>{item.body}</p></>; return item.href ? <Link href={item.href} key={`${item.title}-${index}`}>{content}</Link> : <article key={`${item.title}-${index}`}>{content}</article>; })}</div><div className={styles.sectionAction}>{action(section.ctaLabel, section.ctaHref)}</div></div></section>;
   return <section className={styles.split} data-tone={section.styleVariant} data-media={section.mediaPosition}><div className="site-container">{image ? <div className={styles.splitImage}><Image src={image} alt={section.mediaAltText ?? section.heading ?? "Marble sculpture"} fill sizes="(max-width: 850px) 100vw, 48vw" /></div> : null}<div className={styles.splitCopy}><small>{section.eyebrow}</small><h2 className="font-display">{section.heading}</h2><p>{section.body}</p><div className={styles.actions}>{action(section.ctaLabel, section.ctaHref)}{action(section.secondaryCtaLabel, section.secondaryCtaHref, true)}</div></div></div></section>;
 }
 
 export function PublishedPageView({ page, animateLogo = false, protectedContent }: { page: PublishedPage; animateLogo?: boolean; protectedContent?: ReactNode }) {
-  return <ToastProvider><SiteHeader animateLogo={animateLogo} /><main id="main-content" tabIndex={-1}>{page.sections.map((section, index) => <Block section={section} first={index === 0} key={section.id} />)}{protectedContent}</main><SiteFooter /><WhatsAppAssistance elevated={page.slug === "home"} /><CookieConsent /></ToastProvider>;
+  return <ToastProvider><SiteHeader animateLogo={animateLogo} /><main id="main-content" tabIndex={-1}>{page.sections.map((section, index) => <Block section={section} first={index === 0} homeHero={page.slug === "home" && index === 0} key={section.id} />)}{protectedContent}</main><SiteFooter /><WhatsAppAssistance elevated={page.slug === "home"} /><CookieConsent /></ToastProvider>;
 }
