@@ -162,18 +162,26 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
     }
   }
 
-  async function uploadImage(file: File) {
+  async function uploadImages(files: File[]) {
+    if (!files.length) return;
     setSaving(true);
-    const form = new FormData();
-    form.set("altText", `${product.name} hand-carved marble work`);
+    let uploaded = 0;
     try {
-      form.set("file", await prepareImageForUpload(file));
-      const response = await fetch(`/api/v1/admin/products/${encodeURIComponent(product.id)}/media`, { method: "POST", body: form });
-      if (!response.ok) throw new Error();
-      showToast(`Image added to ${product.name}.`);
+      for (const file of files) {
+        const form = new FormData();
+        form.set("altText", `${product.name} hand-carved marble work`);
+        form.set("file", await prepareImageForUpload(file));
+        const response = await fetch(`/api/v1/admin/products/${encodeURIComponent(product.id)}/media`, { method: "POST", body: form });
+        if (!response.ok) throw new Error();
+        uploaded += 1;
+      }
+      showToast(`${uploaded} ${uploaded === 1 ? "image" : "images"} added to ${product.name}.`);
       await refresh();
     } catch {
-      showToast("The image could not be uploaded. Use JPEG, PNG or WebP up to 12 MB.");
+      showToast(uploaded
+        ? `${uploaded} ${uploaded === 1 ? "image was" : "images were"} added, but a later upload failed. Use JPEG, PNG or WebP files up to 12 MB each.`
+        : "The images could not be uploaded. Use JPEG, PNG or WebP files up to 12 MB each.");
+      if (uploaded) await refresh();
     } finally {
       setSaving(false);
     }
@@ -219,7 +227,7 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
       <div className={styles.editorActions}>
         <Link href={`/products/${product.slug}`} target="_blank">View product <ExternalLink aria-hidden="true" size={14} /></Link>
         <span>{variant ? `${variant.sku} · ${variant.heightMm} mm` : "Add the first selling details before publishing."}</span>
-        <label className={styles.uploadButton}><Upload aria-hidden="true" size={15} /> Add image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={saving} onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadImage(file); event.currentTarget.value = ""; }} /></label>
+        <label className={styles.uploadButton}><Upload aria-hidden="true" size={15} /> Add photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={saving} onChange={(event) => { const files = Array.from(event.target.files ?? []); if (files.length) void uploadImages(files); event.currentTarget.value = ""; }} /></label>
         <button type="button" disabled={saving} onClick={saveProduct}><Save aria-hidden="true" size={16} /> {saving ? "Saving…" : "Save changes"}</button>
       </div>
       {!variant ? (
