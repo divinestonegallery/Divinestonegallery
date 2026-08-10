@@ -82,7 +82,7 @@ function ProductCard({ item, saved, toggleSaved }: { item: CatalogItem; saved: b
   );
 }
 
-export function ShopCatalog({ breadcrumbs, products: catalogProducts }: { breadcrumbs: ReactNode; products: CatalogItem[] }) {
+export function ShopCatalog({ breadcrumbs, products: catalogProducts, availableCategories = [], availableDeities = [] }: { breadcrumbs: ReactNode; products: CatalogItem[]; availableCategories?: string[]; availableDeities?: string[] }) {
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [sort, setSort] = useState("featured");
@@ -90,8 +90,8 @@ export function ShopCatalog({ breadcrumbs, products: catalogProducts }: { breadc
   const [filterOpen, setFilterOpen] = useState(false);
   const savedWorks = useSavedWorks();
   const { showToast } = useToast();
-  const categories = useMemo(() => ["All", ...Array.from(new Set(catalogProducts.map((item) => item.category)))], [catalogProducts]);
-  const deities = useMemo(() => ["All", ...Array.from(new Set(catalogProducts.map((item) => item.deity)))], [catalogProducts]);
+  const categories = useMemo(() => ["All", ...Array.from(new Set([...availableCategories, ...catalogProducts.map((item) => item.category)]))], [availableCategories, catalogProducts]);
+  const deities = useMemo(() => ["All", ...Array.from(new Set([...availableDeities, ...catalogProducts.map((item) => item.deity)]))], [availableDeities, catalogProducts]);
 
   const products = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();

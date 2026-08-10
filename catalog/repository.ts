@@ -9,6 +9,11 @@ import {
 } from "@/db/schema";
 import { CatalogItem, catalogItems } from "@/features/catalog/catalog-data";
 
+export type PublicCatalogFacets = {
+  categories: string[];
+  deities: string[];
+};
+
 function heightInches(heightMm: number) {
   return Number((heightMm / 25.4).toFixed(1));
 }
@@ -102,6 +107,29 @@ export async function getPublicCatalog(): Promise<CatalogItem[]> {
     return await readDatabaseCatalog();
   } catch {
     return catalogItems;
+  }
+}
+
+export async function getPublicCatalogFacets(): Promise<PublicCatalogFacets> {
+  const fallback = {
+    categories: [...new Set(catalogItems.map((item) => item.category))],
+    deities: [...new Set(catalogItems.map((item) => item.deity))],
+  };
+  if (!process.env.DATABASE_URL?.trim()) return fallback;
+
+  try {
+    const { getDb } = await import("@/db");
+    const db = getDb();
+    const [categoryRows, deityRows] = await Promise.all([
+      db.select({ name: categories.name }).from(categories).where(eq(categories.isActive, true)).orderBy(asc(categories.sortOrder), asc(categories.name)),
+      db.select({ name: deities.name }).from(deities).where(eq(deities.isActive, true)).orderBy(asc(deities.sortOrder), asc(deities.name)),
+    ]);
+    return {
+      categories: categoryRows.map((item) => item.name),
+      deities: deityRows.map((item) => item.name),
+    };
+  } catch {
+    return fallback;
   }
 }
 

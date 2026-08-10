@@ -74,9 +74,12 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
     let cancelled = false;
     void fetch("/api/v1/products?limit=100", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : Promise.reject())
-      .then((payload: { data?: Array<{ deity?: string }> }) => {
+      .then((payload: { data?: Array<{ deity?: string }>; meta?: { deities?: string[] } }) => {
         if (cancelled) return;
-        const names = [...new Set((payload.data ?? []).map((item) => item.deity?.trim()).filter((name): name is string => Boolean(name)))];
+        const names = [...new Set([
+          ...(payload.meta?.deities ?? []),
+          ...(payload.data ?? []).map((item) => item.deity?.trim()).filter((name): name is string => Boolean(name)),
+        ])];
         if (names.length) {
           setDeityLinks([
             ...names.slice(0, 8).map((name) => [name, `/shop?q=${encodeURIComponent(name)}`] as const),

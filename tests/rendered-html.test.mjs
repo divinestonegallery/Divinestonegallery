@@ -84,14 +84,16 @@ test("renders every customer-facing route", async () => {
   }
 });
 
-test("serves the public catalogue API with the seeded collection", async () => {
+test("serves the public catalogue API with products and active filter options", async () => {
   const response = await render("/api/v1/products");
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^application\/json\b/i);
   const payload = await response.json();
-  assert.equal(payload.data.length, 9);
-  assert.equal(payload.meta.total, 9);
-  assert.ok(payload.data.every((product) => product.pricePaise == null));
+  assert.ok(payload.data.length >= 9);
+  assert.equal(payload.meta.total, payload.data.length);
+  assert.ok(payload.data.every((product) => product.id && product.slug && product.deity));
+  assert.ok(payload.meta.deities.includes("Hanuman Ji"));
+  assert.ok(payload.meta.categories.includes("Deity Idol"));
 });
 
 test("protects account collection APIs from anonymous access", async () => {

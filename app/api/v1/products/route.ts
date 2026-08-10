@@ -1,4 +1,4 @@
-import { getPublicCatalog } from "@/catalog/repository";
+import { getPublicCatalog, getPublicCatalogFacets } from "@/catalog/repository";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const limit = Math.min(Math.max(Number(search.get("limit")) || 50, 1), 100);
   const offset = Math.max(Number(search.get("offset")) || 0, 0);
 
-  const catalog = await getPublicCatalog();
+  const [catalog, facets] = await Promise.all([getPublicCatalog(), getPublicCatalogFacets()]);
   const filtered = catalog.filter((item) => {
     const haystack = [item.name, item.deity, item.category, item.material, item.finish]
       .join(" ")
@@ -26,6 +26,6 @@ export async function GET(request: Request) {
 
   return Response.json({
     data: filtered.slice(offset, offset + limit),
-    meta: { total: filtered.length, limit, offset },
+    meta: { total: filtered.length, limit, offset, ...facets },
   });
 }

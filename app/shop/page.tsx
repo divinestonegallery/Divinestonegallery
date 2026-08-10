@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { WhatsAppAssistance } from "@/components/site/whatsapp-assistance";
 import { ToastProvider } from "@/components/ui/toast";
-import { getPublicCatalog } from "@/catalog/repository";
+import { getPublicCatalog, getPublicCatalogFacets } from "@/catalog/repository";
 import { ShopCatalog } from "@/features/catalog/shop-catalog";
 
 export const metadata: Metadata = {
@@ -20,13 +20,13 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ShopPage() {
-  const products = await getPublicCatalog();
+  const [products, facets] = await Promise.all([getPublicCatalog(), getPublicCatalogFacets()]);
   return (
     <ToastProvider>
       <SiteHeader />
       <main id="main-content" tabIndex={-1}>
         <Suspense fallback={<div className="site-container" aria-live="polite">Preparing the marble collection…</div>}>
-          <ShopCatalog products={products} breadcrumbs={<Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Shop" }]} />} />
+          <ShopCatalog products={products} availableCategories={facets.categories} availableDeities={facets.deities} breadcrumbs={<Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Shop" }]} />} />
         </Suspense>
       </main>
       <SiteFooter />
