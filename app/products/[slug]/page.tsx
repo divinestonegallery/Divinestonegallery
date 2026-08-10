@@ -23,6 +23,7 @@ import { getSiteUrl } from "@/config/site";
 import {
   getPublicCatalogItem,
   getRelatedPublicCatalogItems,
+  getProductGallery,
 } from "@/catalog/repository";
 import { ProductActions } from "@/features/catalog/product-actions";
 import { ProductGallery } from "@/features/catalog/product-gallery";
@@ -56,7 +57,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await getPublicCatalogItem(slug);
   if (!product) notFound();
 
-  const related = await getRelatedPublicCatalogItems(product);
+  const [related, gallery] = await Promise.all([
+    getRelatedPublicCatalogItems(product),
+    getProductGallery(product.id, product.image, product.imageAlt),
+  ]);
+
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -114,7 +119,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           <section className={styles.productHero}>
             <div className={styles.galleryWrap}>
-              <ProductGallery images={[{ src: product.image, alt: product.imageAlt }]} />
+              <ProductGallery images={gallery} />
               <div className={styles.imagePromise}>
                 <BadgeCheck aria-hidden="true" size={18} />
                 <span>Full sculpture shown without image cropping</span>

@@ -149,3 +149,32 @@ export async function getRelatedPublicCatalogItems(item: CatalogItem, count = 3)
     })
     .slice(0, count);
 }
+
+export async function getProductGallery(productId: string, fallbackImage: string, fallbackAlt: string) {
+  if (!process.env.DATABASE_URL?.trim()) {
+    return [{ src: fallbackImage, alt: fallbackAlt }];
+  }
+  try {
+    const { getDb } = await import("@/db");
+    const db = getDb();
+    const rows = await db
+      .select({
+        publicPath: mediaAssets.publicPath,
+        altText: mediaAssets.altText,
+        mediaId: mediaAssets.id,
+      })
+      .from(productMedia)
+      .innerJoin(mediaAssets, eq(productMedia.mediaAssetId, mediaAssets.id))
+      .where(eq(productMedia.productId, productId))
+      .orderBy(asc(productMedia.sortOrder));
+
+    if (!rows.length) return [{ src: fallbackImage, alt: fallbackAlt }];
+
+    return rows.map((row) => ({
+      src: row.publicPath ?? `/api/v1/media/${encodeURIComponent(row.mediaId)}`,
+      alt: row.altText ?? fallbackAlt,
+    }));
+  } catch {
+    return [{ src: fallbackImage, alt: fallbackAlt }];
+  }
+}
