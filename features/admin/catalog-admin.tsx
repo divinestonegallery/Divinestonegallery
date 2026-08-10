@@ -78,6 +78,7 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
   const [deityId, setDeityId] = useState(product.deityId ?? "");
   const [collectionIds, setCollectionIds] = useState(product.collections.map((collection) => collection.id));
   const variant = product.variants[0];
+  const [heightCm, setHeightCm] = useState(variant?.heightMm ? String(variant.heightMm / 10) : "");
   const [priceRupees, setPriceRupees] = useState(variant?.pricePaise ? String(variant.pricePaise / 100) : "");
   const [gstPercent, setGstPercent] = useState(variant?.gstRateBps ? String(variant.gstRateBps / 100) : "");
   const [weightKg, setWeightKg] = useState(variant?.weightGrams ? String(variant.weightGrams / 1000) : "");
@@ -139,6 +140,7 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
           body: JSON.stringify({
             pricePaise: priceRupees ? Math.round(Number(priceRupees) * 100) : null,
             gstRateBps: gstPercent ? Math.round(Number(gstPercent) * 100) : null,
+            heightMm: Math.round(Number(heightCm) * 10),
             weightGrams: weightKg ? Math.round(Number(weightKg) * 1000) : null,
             widthMm: widthCm ? Math.round(Number(widthCm) * 10) : null,
             depthMm: depthCm ? Math.round(Number(depthCm) * 10) : null,
@@ -202,6 +204,7 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
         <label><span>Deity</span><select value={deityId} onChange={(event) => setDeityId(event.target.value)}><option value="">No deity</option>{lookups.deities.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
         <label><span>Price before GST (₹)</span><input inputMode="decimal" value={priceRupees} onChange={(event) => setPriceRupees(event.target.value)} placeholder="Not entered" /></label>
         <label><span>GST rate (%)</span><input inputMode="decimal" value={gstPercent} onChange={(event) => setGstPercent(event.target.value)} placeholder="Add after GST registration" /></label>
+        <label><span>Sculpture height (cm)</span><input inputMode="decimal" min="0.1" step="0.1" required value={heightCm} onChange={(event) => setHeightCm(event.target.value)} /></label>
         <label><span>Weight (kg)</span><input inputMode="decimal" value={weightKg} onChange={(event) => setWeightKg(event.target.value)} placeholder="Needed for shipping" /></label>
         <label><span>Sculpture width (cm)</span><input inputMode="decimal" value={widthCm} onChange={(event) => setWidthCm(event.target.value)} placeholder="Optional" /></label>
         <label><span>Sculpture depth (cm)</span><input inputMode="decimal" value={depthCm} onChange={(event) => setDepthCm(event.target.value)} placeholder="Optional" /></label>
@@ -282,16 +285,44 @@ export function CatalogAdmin() {
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
-    const response = await fetch("/api/v1/admin/products", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(Object.fromEntries(form)),
-    });
-    if (!response.ok) { showToast("The draft product could not be created."); return; }
-    formElement.reset();
-    setShowCreate(false);
-    showToast("Draft product created.");
-    await load();
+    const heightCm = Number(form.get("heightCm"));
+    try {
+      const response = await fetch("/api/v1/admin/products", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(form)),
+      });
+      if (!response.ok) throw new Error("product");
+      const created = await response.json() as { data: AdminProduct | null };
+      if (!created.data?.id) throw new Error("product");
+
+      const variantResponse = await fetch(`/api/v1/admin/products/${encodeURIComponent(created.data.id)}/variants`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          sku: form.get("sku"),
+          name: form.get("variantName"),
+          material: form.get("material"),
+          finish: form.get("finish"),
+          heightMm: Number.isFinite(heightCm) ? Math.round(heightCm * 10) : null,
+          inventoryKind: "unique",
+          stockQuantity: 0,
+          lowStockThreshold: 1,
+          codEligible: true,
+        }),
+      });
+      if (!variantResponse.ok) {
+        showToast("The draft was created, but selling details failed. Open it below and add a unique SKU, material and height.");
+        await load();
+        return;
+      }
+      formElement.reset();
+      setShowCreate(false);
+      showToast("Draft product and sculpture details created.");
+      await load();
+    } catch {
+      showToast("The draft product could not be created. Check that the URL slug is unique.");
+    }
   }
 
   return (
@@ -310,6 +341,11 @@ export function CatalogAdmin() {
             <label><span>URL slug</span><input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="ganesha-24-inch-marble" /></label>
             <label><span>Category</span><select name="categoryId" required><option value="">Choose category</option>{payload?.lookups.categories.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
             <label><span>Deity</span><select name="deityId" required><option value="">Choose deity</option>{payload?.lookups.deities.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
+            <label><span>SKU</span><input name="sku" required maxLength={100} placeholder="DSG-HANUMAN-24" /></label>
+            <label><span>Variant name</span><input name="variantName" required maxLength={160} placeholder="Standard" /></label>
+            <label><span>Material</span><input name="material" required maxLength={160} placeholder="Makrana white marble" /></label>
+            <label><span>Finish</span><input name="finish" maxLength={160} placeholder="Natural white or hand-painted" /></label>
+            <label><span>Sculpture height (cm)</span><input name="heightCm" type="number" required min="0.1" step="0.1" placeholder="60.9" /></label>
             <input type="hidden" name="productType" value="ready_made" /><input type="hidden" name="salesMode" value="both" />
             <button type="submit">Create draft</button>
           </form>
