@@ -75,7 +75,7 @@ function ProductCard({ item, saved, toggleSaved }: { item: CatalogItem; saved: b
         <p>{item.material} · {item.finish}</p>
         <div>
           <Link href={`/products/${item.slug}`}>View details <ArrowRight aria-hidden="true" size={15} /></Link>
-          <a href={`https://wa.me/916376871065?text=${whatsappText}`} target="_blank" rel="noreferrer">Enquire</a>
+          <a href={`https://wa.me/919166138566?text=${whatsappText}`} target="_blank" rel="noreferrer">Enquire</a>
         </div>
       </div>
     </article>
@@ -144,7 +144,7 @@ export function ShopCatalog({ breadcrumbs, products: catalogProducts, availableC
             <div className={styles.heroNote}>
               <Sparkles aria-hidden="true" size={22} />
               <span><strong className="font-display">Need help choosing?</strong><small>We can guide you on deity, size, stone and placement.</small></span>
-              <a href="https://wa.me/916376871065?text=Namaste%2C%20I%20would%20like%20help%20choosing%20a%20moorti." target="_blank" rel="noreferrer">Ask our gallery <ArrowRight aria-hidden="true" size={15} /></a>
+              <a href="https://wa.me/919166138566?text=Namaste%2C%20I%20would%20like%20help%20choosing%20a%20moorti." target="_blank" rel="noreferrer">Ask our gallery <ArrowRight aria-hidden="true" size={15} /></a>
             </div>
           </div>
         </div>

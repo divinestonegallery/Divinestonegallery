@@ -32,7 +32,7 @@ export function ProductActions({
   const message = encodeURIComponent(
     `Namaste, I would like current availability and details for ${name} (${height} inch).`,
   );
-  const whatsappHref = `https://wa.me/916376871065?text=${message}`;
+  const whatsappHref = `https://wa.me/919166138566?text=${message}`;
   const directReady = pricePaise !== null && pricePaise !== undefined && gstRateBps !== null && gstRateBps !== undefined && Boolean(stockQuantity) && salesMode !== "quote";
   const price = directReady
     ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(pricePaise / 100)
@@ -59,7 +59,7 @@ export function ProductActions({
         <a className={buttonClassName({ size: "lg", className: styles.whatsappButton })} href={whatsappHref} target="_blank" rel="noreferrer">
           <MessageCircle aria-hidden="true" size={18} /> Enquire on WhatsApp
         </a>
-        <a className={buttonClassName({ variant: "outline", size: "lg", className: styles.callButton })} href="tel:+916376871065">
+        <a className={buttonClassName({ variant: "outline", size: "lg", className: styles.callButton })} href="tel:+919166138566">
           <Phone aria-hidden="true" size={18} /> Call {brand.phone}
         </a>
         <div className={styles.secondaryActions}>

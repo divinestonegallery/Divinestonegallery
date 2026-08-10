@@ -70,7 +70,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
         </section>
 
         <section className={styles.articleCta}>
-          <div className="site-container"><MessageCircle aria-hidden="true" size={25} /><p className={styles.eyebrow}>Personal gallery assistance</p><h2 className="font-display">Have a question about your murti or space?</h2><p>Send the gallery a photo, measurement or product link and we will help you understand the next step.</p><a className={buttonClassName({ size: "lg" })} href="https://wa.me/916376871065?text=Namaste%2C%20I%20have%20a%20question%20after%20reading%20one%20of%20your%20murti%20guides." target="_blank" rel="noreferrer">Ask on WhatsApp <ArrowRight aria-hidden="true" size={18} /></a></div>
+          <div className="site-container"><MessageCircle aria-hidden="true" size={25} /><p className={styles.eyebrow}>Personal gallery assistance</p><h2 className="font-display">Have a question about your murti or space?</h2><p>Send the gallery a photo, measurement or product link and we will help you understand the next step.</p><a className={buttonClassName({ size: "lg" })} href="https://wa.me/919166138566?text=Namaste%2C%20I%20have%20a%20question%20after%20reading%20one%20of%20your%20murti%20guides." target="_blank" rel="noreferrer">Ask on WhatsApp <ArrowRight aria-hidden="true" size={18} /></a></div>
         </section>
 
         <section className={styles.relatedGuides}>

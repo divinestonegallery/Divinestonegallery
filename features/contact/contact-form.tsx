@@ -20,7 +20,7 @@ export function ContactForm() {
       `Product or page: ${value("product")}`,
       `Message: ${value("message")}`,
     ].join("\n");
-    window.open(`https://wa.me/916376871065?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    window.open(`https://wa.me/919166138566?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   }
 
   return (

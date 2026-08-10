@@ -216,7 +216,7 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
             </button>
             <a
               className={`${styles.headerAction} ${styles.desktopOnlyAction}`}
-              href="https://wa.me/916376871065?text=Namaste%2C%20I%20would%20like%20assistance%20from%20Divine%20Stone%20Gallery."
+              href="https://wa.me/919166138566?text=Namaste%2C%20I%20would%20like%20assistance%20from%20Divine%20Stone%20Gallery."
               target="_blank"
               rel="noreferrer"
               aria-label="Chat with Divine Stone Gallery on WhatsApp"

@@ -65,7 +65,7 @@ function StaticCustomMurtiPage() {
                 <p>Commission a murti created around your deity, sacred space and preferred expression—guided personally by our fourth-generation family atelier.</p>
                 <div className={styles.heroActions}>
                   <a className={buttonClassName({ size: "lg" })} href="#consultation">Begin your consultation <ArrowRight aria-hidden="true" size={18} /></a>
-                  <a className={buttonClassName({ variant: "outline", size: "lg" })} href="https://wa.me/916376871065?text=Namaste%2C%20I%20would%20like%20to%20discuss%20a%20custom%20murti." target="_blank" rel="noreferrer"><MessageCircle aria-hidden="true" size={18} /> Ask on WhatsApp</a>
+                  <a className={buttonClassName({ variant: "outline", size: "lg" })} href="https://wa.me/919166138566?text=Namaste%2C%20I%20would%20like%20to%20discuss%20a%20custom%20murti." target="_blank" rel="noreferrer"><MessageCircle aria-hidden="true" size={18} /> Ask on WhatsApp</a>
                 </div>
                 <div className={styles.heroProof}>
                   <span><BadgeCheck aria-hidden="true" size={18} /> Fourth-generation guidance</span>

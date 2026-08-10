@@ -30,7 +30,7 @@ export default function GuidesPage() {
             <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Guides" }]} />
             <div className={styles.hubHeroGrid}>
               <div><p className={styles.eyebrow}>The Divine Stone guidebook</p><h1 className="font-display">Choose thoughtfully.{" "}<span>Care beautifully.</span></h1><p>Simple, practical guidance for understanding marble, finding the right scale and caring for a sacred work over time.</p></div>
-              <aside><BookOpen aria-hidden="true" size={24} /><strong className="font-display">Need personal guidance?</strong><p>Share your space and preferences with our gallery for help beyond these guides.</p><a href="https://wa.me/916376871065?text=Namaste%2C%20I%20would%20like%20guidance%20choosing%20or%20caring%20for%20a%20murti." target="_blank" rel="noreferrer">Ask the gallery <ArrowRight aria-hidden="true" size={16} /></a></aside>
+              <aside><BookOpen aria-hidden="true" size={24} /><strong className="font-display">Need personal guidance?</strong><p>Share your space and preferences with our gallery for help beyond these guides.</p><a href="https://wa.me/919166138566?text=Namaste%2C%20I%20would%20like%20guidance%20choosing%20or%20caring%20for%20a%20murti." target="_blank" rel="noreferrer">Ask the gallery <ArrowRight aria-hidden="true" size={16} /></a></aside>
             </div>
           </div>
         </section>

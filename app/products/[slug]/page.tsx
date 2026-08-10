@@ -163,7 +163,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <p>
               Share a photo or measurements of your mandir or temple. Our gallery can help you understand proportion, marble, placement and available customisation before you decide.
             </p>
-            <a href="https://wa.me/916376871065?text=Namaste%2C%20I%20would%20like%20guidance%20choosing%20the%20right%20moorti%20for%20my%20space." target="_blank" rel="noreferrer">
+            <a href="https://wa.me/919166138566?text=Namaste%2C%20I%20would%20like%20guidance%20choosing%20the%20right%20moorti%20for%20my%20space." target="_blank" rel="noreferrer">
               Speak with our gallery <ArrowRight aria-hidden="true" size={17} />
             </a>
           </div>

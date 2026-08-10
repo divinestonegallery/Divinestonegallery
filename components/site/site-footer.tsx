@@ -22,7 +22,7 @@ export async function SiteFooter() {
           </div>
           <a
             className={styles.newsletterCta}
-            href="https://wa.me/916376871065?text=Namaste%2C%20please%20share%20updates%20about%20new%20Divine%20Stone%20Gallery%20creations."
+            href="https://wa.me/919166138566?text=Namaste%2C%20please%20share%20updates%20about%20new%20Divine%20Stone%20Gallery%20creations."
             target="_blank"
             rel="noreferrer"
           >

@@ -304,10 +304,10 @@ function StaticHome() {
             <h2 className="font-display">Let us help you find the right moorti.</h2>
             <p>Share your space, preferred deity and approximate size. Our gallery will guide you from there.</p>
             <div>
-              <a className={buttonClassName({ size: "lg" })} href="https://wa.me/916376871065?text=Namaste%2C%20I%20would%20like%20help%20choosing%20a%20moorti." target="_blank" rel="noreferrer">
+              <a className={buttonClassName({ size: "lg" })} href="https://wa.me/919166138566?text=Namaste%2C%20I%20would%20like%20help%20choosing%20a%20moorti." target="_blank" rel="noreferrer">
                 Chat on WhatsApp <ArrowRight aria-hidden="true" size={18} />
               </a>
-              <a className={buttonClassName({ variant: "outline", size: "lg" })} href="tel:+916376871065">Call {brand.phone}</a>
+              <a className={buttonClassName({ variant: "outline", size: "lg" })} href="tel:+919166138566">Call {brand.phone}</a>
             </div>
           </div>
         </section>

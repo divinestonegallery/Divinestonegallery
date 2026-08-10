@@ -6,7 +6,7 @@ async function database() { const { getDb } = await import("@/db"); return getDb
 export const settingDefinitions = [
   { key: "business_name", label: "Business name", group: "Business", defaultValue: "Divine Stone Gallery" },
   { key: "support_email", label: "Customer email", group: "Business", defaultValue: "divinestonegallery@gmail.com" },
-  { key: "support_phone", label: "Customer phone", group: "Business", defaultValue: "+91 63768 71065" },
+  { key: "support_phone", label: "Customer phone", group: "Business", defaultValue: "+91 91661 38566" },
   { key: "business_address", label: "Workshop address", group: "Business", defaultValue: "Alwar, Rajasthan, India" },
   { key: "currency", label: "Currency", group: "Commerce", defaultValue: "INR" },
   { key: "gst_display", label: "GST display", group: "Commerce", defaultValue: "Excluded; calculated separately" },
