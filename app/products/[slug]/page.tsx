@@ -33,24 +33,6 @@ type ProductPageProps = { params: Promise<{ slug: string }> };
 // New and updated products are resolved from PostgreSQL at request time.
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const product = await getPublicCatalogItem(slug);
-
-  if (!product) return { title: "Marble Moorti" };
-
-  return {
-    title: `${product.name} | ${product.height}-inch Marble Moorti`,
-    description: product.description,
-    alternates: { canonical: `/products/${product.slug}` },
-    openGraph: {
-      title: `${product.name} | Divine Stone Gallery`,
-      description: product.description,
-      images: [{ url: product.image, alt: product.imageAlt }],
-    },
-  };
-}
-
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const product = await getPublicCatalogItem(slug);
