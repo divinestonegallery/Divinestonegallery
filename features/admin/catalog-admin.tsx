@@ -67,6 +67,15 @@ function completion(product: AdminProduct) {
   return { complete: checks.filter(Boolean).length, total: checks.length };
 }
 
+function inchesFromMm(value: number | null | undefined) {
+  return value ? String(Number((value / 25.4).toFixed(2))) : "";
+}
+
+function mmFromInches(value: string | FormDataEntryValue | null) {
+  const inches = Number(value);
+  return Number.isFinite(inches) && inches > 0 ? Math.round(inches * 25.4) : null;
+}
+
 function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; lookups: CatalogResponse["lookups"]; refresh: () => Promise<void> }) {
   const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -78,15 +87,15 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
   const [deityId, setDeityId] = useState(product.deityId ?? "");
   const [collectionIds, setCollectionIds] = useState(product.collections.map((collection) => collection.id));
   const variant = product.variants[0];
-  const [heightCm, setHeightCm] = useState(variant?.heightMm ? String(variant.heightMm / 10) : "");
+  const [heightInches, setHeightInches] = useState(inchesFromMm(variant?.heightMm));
   const [priceRupees, setPriceRupees] = useState(variant?.pricePaise ? String(variant.pricePaise / 100) : "");
   const [gstPercent, setGstPercent] = useState(variant?.gstRateBps ? String(variant.gstRateBps / 100) : "");
   const [weightKg, setWeightKg] = useState(variant?.weightGrams ? String(variant.weightGrams / 1000) : "");
-  const [widthCm, setWidthCm] = useState(variant?.widthMm ? String(variant.widthMm / 10) : "");
-  const [depthCm, setDepthCm] = useState(variant?.depthMm ? String(variant.depthMm / 10) : "");
-  const [packageLengthCm, setPackageLengthCm] = useState(variant?.packageLengthMm ? String(variant.packageLengthMm / 10) : "");
-  const [packageWidthCm, setPackageWidthCm] = useState(variant?.packageWidthMm ? String(variant.packageWidthMm / 10) : "");
-  const [packageHeightCm, setPackageHeightCm] = useState(variant?.packageHeightMm ? String(variant.packageHeightMm / 10) : "");
+  const [widthInches, setWidthInches] = useState(inchesFromMm(variant?.widthMm));
+  const [depthInches, setDepthInches] = useState(inchesFromMm(variant?.depthMm));
+  const [packageLengthInches, setPackageLengthInches] = useState(inchesFromMm(variant?.packageLengthMm));
+  const [packageWidthInches, setPackageWidthInches] = useState(inchesFromMm(variant?.packageWidthMm));
+  const [packageHeightInches, setPackageHeightInches] = useState(inchesFromMm(variant?.packageHeightMm));
   const [stock, setStock] = useState(variant ? String(variant.stockQuantity) : "0");
   const readiness = completion(product);
   const primaryMedia = product.media.find((media) => media.isPrimary) ?? product.media[0];
@@ -95,7 +104,7 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
-    const heightCm = Number(form.get("heightCm"));
+    const heightMm = mmFromInches(form.get("heightInches"));
     setSaving(true);
     try {
       const response = await fetch(`/api/v1/admin/products/${encodeURIComponent(product.id)}/variants`, {
@@ -106,7 +115,7 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
           name: form.get("variantName"),
           material: form.get("material"),
           finish: form.get("finish"),
-          heightMm: Number.isFinite(heightCm) ? Math.round(heightCm * 10) : null,
+          heightMm,
           inventoryKind: "unique",
           stockQuantity: 0,
           lowStockThreshold: 1,
@@ -140,13 +149,13 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
           body: JSON.stringify({
             pricePaise: priceRupees ? Math.round(Number(priceRupees) * 100) : null,
             gstRateBps: gstPercent ? Math.round(Number(gstPercent) * 100) : null,
-            heightMm: Math.round(Number(heightCm) * 10),
+            heightMm: mmFromInches(heightInches),
             weightGrams: weightKg ? Math.round(Number(weightKg) * 1000) : null,
-            widthMm: widthCm ? Math.round(Number(widthCm) * 10) : null,
-            depthMm: depthCm ? Math.round(Number(depthCm) * 10) : null,
-            packageLengthMm: packageLengthCm ? Math.round(Number(packageLengthCm) * 10) : null,
-            packageWidthMm: packageWidthCm ? Math.round(Number(packageWidthCm) * 10) : null,
-            packageHeightMm: packageHeightCm ? Math.round(Number(packageHeightCm) * 10) : null,
+            widthMm: mmFromInches(widthInches),
+            depthMm: mmFromInches(depthInches),
+            packageLengthMm: mmFromInches(packageLengthInches),
+            packageWidthMm: mmFromInches(packageWidthInches),
+            packageHeightMm: mmFromInches(packageHeightInches),
             stockQuantity: Number(stock),
           }),
         });
@@ -212,13 +221,13 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
         <label><span>Deity</span><select value={deityId} onChange={(event) => setDeityId(event.target.value)}><option value="">No deity</option>{lookups.deities.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
         <label><span>Price before GST (₹)</span><input inputMode="decimal" value={priceRupees} onChange={(event) => setPriceRupees(event.target.value)} placeholder="Not entered" /></label>
         <label><span>GST rate (%)</span><input inputMode="decimal" value={gstPercent} onChange={(event) => setGstPercent(event.target.value)} placeholder="Add after GST registration" /></label>
-        <label><span>Sculpture height (cm)</span><input inputMode="decimal" min="0.1" step="0.1" required value={heightCm} onChange={(event) => setHeightCm(event.target.value)} /></label>
+        <label><span>Sculpture height (inches)</span><input inputMode="decimal" min="0.1" step="0.1" required value={heightInches} onChange={(event) => setHeightInches(event.target.value)} /></label>
         <label><span>Weight (kg)</span><input inputMode="decimal" value={weightKg} onChange={(event) => setWeightKg(event.target.value)} placeholder="Needed for shipping" /></label>
-        <label><span>Sculpture width (cm)</span><input inputMode="decimal" value={widthCm} onChange={(event) => setWidthCm(event.target.value)} placeholder="Optional" /></label>
-        <label><span>Sculpture depth (cm)</span><input inputMode="decimal" value={depthCm} onChange={(event) => setDepthCm(event.target.value)} placeholder="Optional" /></label>
-        <label><span>Packed length (cm)</span><input inputMode="decimal" value={packageLengthCm} onChange={(event) => setPackageLengthCm(event.target.value)} placeholder="Required for rates" /></label>
-        <label><span>Packed width (cm)</span><input inputMode="decimal" value={packageWidthCm} onChange={(event) => setPackageWidthCm(event.target.value)} placeholder="Required for rates" /></label>
-        <label><span>Packed height (cm)</span><input inputMode="decimal" value={packageHeightCm} onChange={(event) => setPackageHeightCm(event.target.value)} placeholder="Required for rates" /></label>
+        <label><span>Sculpture width (inches)</span><input inputMode="decimal" value={widthInches} onChange={(event) => setWidthInches(event.target.value)} placeholder="Optional" /></label>
+        <label><span>Sculpture depth (inches)</span><input inputMode="decimal" value={depthInches} onChange={(event) => setDepthInches(event.target.value)} placeholder="Optional" /></label>
+        <label><span>Packed length (inches)</span><input inputMode="decimal" value={packageLengthInches} onChange={(event) => setPackageLengthInches(event.target.value)} placeholder="Required for rates" /></label>
+        <label><span>Packed width (inches)</span><input inputMode="decimal" value={packageWidthInches} onChange={(event) => setPackageWidthInches(event.target.value)} placeholder="Required for rates" /></label>
+        <label><span>Packed height (inches)</span><input inputMode="decimal" value={packageHeightInches} onChange={(event) => setPackageHeightInches(event.target.value)} placeholder="Required for rates" /></label>
         <label><span>Stock quantity</span><input inputMode="numeric" value={stock} onChange={(event) => setStock(event.target.value)} /></label>
         <label><span>Display order</span><input inputMode="numeric" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)} /></label>
         <label className={styles.checkbox}><input type="checkbox" checked={featured} onChange={(event) => setFeatured(event.target.checked)} /><span>Featured product</span></label>
@@ -226,7 +235,7 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
       </div>
       <div className={styles.editorActions}>
         <Link href={`/products/${product.slug}`} target="_blank">View product <ExternalLink aria-hidden="true" size={14} /></Link>
-        <span>{variant ? `${variant.sku} · ${variant.heightMm} mm` : "Add the first selling details before publishing."}</span>
+        <span>{variant ? `${variant.sku} · ${inchesFromMm(variant.heightMm)} inches` : "Add the first selling details before publishing."}</span>
         <label className={styles.uploadButton}><Upload aria-hidden="true" size={15} /> Add photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={saving} onChange={(event) => { const files = Array.from(event.target.files ?? []); if (files.length) void uploadImages(files); event.currentTarget.value = ""; }} /></label>
         <button type="button" disabled={saving} onClick={saveProduct}><Save aria-hidden="true" size={16} /> {saving ? "Saving…" : "Save changes"}</button>
       </div>
@@ -237,7 +246,7 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
           <label><span>Variant name</span><input name="variantName" required maxLength={160} placeholder="Standard" /></label>
           <label><span>Material</span><input name="material" required maxLength={160} placeholder="Makrana white marble" /></label>
           <label><span>Finish</span><input name="finish" maxLength={160} placeholder="Natural white or hand-painted" /></label>
-          <label><span>Height (cm)</span><input name="heightCm" required inputMode="decimal" min="0.1" step="0.1" placeholder="60.9" /></label>
+          <label><span>Height (inches)</span><input name="heightInches" required inputMode="decimal" min="0.1" step="0.1" placeholder="24" /></label>
           <button type="submit" disabled={saving}>{saving ? "Adding…" : "Add selling details"}</button>
         </form>
       ) : null}
@@ -293,7 +302,7 @@ export function CatalogAdmin() {
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
-    const heightCm = Number(form.get("heightCm"));
+    const heightMm = mmFromInches(form.get("heightInches"));
     try {
       const response = await fetch("/api/v1/admin/products", {
         method: "POST",
@@ -312,7 +321,7 @@ export function CatalogAdmin() {
           name: form.get("variantName"),
           material: form.get("material"),
           finish: form.get("finish"),
-          heightMm: Number.isFinite(heightCm) ? Math.round(heightCm * 10) : null,
+          heightMm,
           inventoryKind: "unique",
           stockQuantity: 0,
           lowStockThreshold: 1,
@@ -352,7 +361,7 @@ export function CatalogAdmin() {
             <label><span>Variant name</span><input name="variantName" required maxLength={160} placeholder="Standard" /></label>
             <label><span>Material</span><input name="material" required maxLength={160} placeholder="Makrana white marble" /></label>
             <label><span>Finish</span><input name="finish" maxLength={160} placeholder="Natural white or hand-painted" /></label>
-            <label><span>Sculpture height (cm)</span><input name="heightCm" type="number" required min="0.1" step="0.1" placeholder="60.9" /></label>
+            <label><span>Sculpture height (inches)</span><input name="heightInches" type="number" required min="0.1" step="0.1" placeholder="24" /></label>
             <input type="hidden" name="productType" value="ready_made" /><input type="hidden" name="salesMode" value="both" />
             <button type="submit">Create draft</button>
           </form>
