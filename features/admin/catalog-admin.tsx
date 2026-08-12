@@ -329,7 +329,7 @@ export function CatalogAdmin() {
       showToast("Draft product and sculpture details created.");
       await load();
     } catch {
-      showToast("The draft product could not be created. Check that the URL slug is unique.");
+      showToast("The draft product could not be created. Check the product details and try again.");
     }
   }
 
@@ -346,7 +346,6 @@ export function CatalogAdmin() {
           <form className={styles.createForm} onSubmit={createProduct}>
             <h2 className="font-display">Create a draft product</h2>
             <label><span>Name</span><input name="name" required maxLength={180} /></label>
-            <label><span>URL slug</span><input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="ganesha-24-inch-marble" /></label>
             <label><span>Category</span><select name="categoryId" required><option value="">Choose category</option>{payload?.lookups.categories.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
             <label><span>Deity</span><select name="deityId" required><option value="">Choose deity</option>{payload?.lookups.deities.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
             <label><span>SKU</span><input name="sku" required maxLength={100} placeholder="DSG-HANUMAN-24" /></label>

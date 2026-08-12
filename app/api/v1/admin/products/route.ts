@@ -9,7 +9,6 @@ import {
   optionalString,
   readJsonObject,
   requiredString,
-  slugValue,
 } from "@/catalog/input";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +44,6 @@ export async function POST(request: Request) {
   if (!body) return Response.json({ error: { code: "INVALID_JSON", message: "A valid product is required." } }, { status: 400 });
 
   const name = requiredString(body.name, 180);
-  const slug = slugValue(body.slug);
   const description = optionalString(body.description, 5000) ?? "";
   const shortDescription = optionalString(body.shortDescription, 500);
   const categoryId = optionalString(body.categoryId, 100);
@@ -53,22 +51,22 @@ export async function POST(request: Request) {
   const productType = enumValue(body.productType, ["ready_made", "made_to_order"] as const) ?? "ready_made";
   const salesMode = enumValue(body.salesMode, ["direct", "quote", "both"] as const) ?? "both";
 
-  if (!name || !slug) {
+  if (!name) {
     return Response.json(
-      { error: { code: "INVALID_PRODUCT", message: "Name and a valid URL slug are required." } },
+      { error: { code: "INVALID_PRODUCT", message: "A product name is required." } },
       { status: 400 },
     );
   }
 
   try {
     const item = await createAdminProduct(
-      { name, slug, description, shortDescription, categoryId, deityId, productType, salesMode },
+      { name, description, shortDescription, categoryId, deityId, productType, salesMode },
       authorization.userId,
     );
     return Response.json({ data: item }, { status: 201 });
   } catch {
     return Response.json(
-      { error: { code: "PRODUCT_CONFLICT", message: "This slug or product information is already in use." } },
+      { error: { code: "PRODUCT_CONFLICT", message: "This product information could not be saved." } },
       { status: 409 },
     );
   }

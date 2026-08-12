@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, like, or, sql } from "drizzle-orm";
 import {
   auditLogs,
   categories,
@@ -85,7 +85,6 @@ export async function getAdminProduct(id: string) {
 }
 
 export type NewProduct = {
-  slug: string;
   name: string;
   shortDescription: string | null;
   description: string;
@@ -99,11 +98,28 @@ export async function createAdminProduct(input: NewProduct, actorUserId: string)
   const db = await database();
   const id = `prd:${crypto.randomUUID()}`;
   const auditId = crypto.randomUUID();
+  const baseSlug = input.name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 140) || "moorti";
+  const existingSlugs = new Set(
+    (await db
+      .select({ slug: products.slug })
+      .from(products)
+      .where(or(eq(products.slug, baseSlug), like(products.slug, `${baseSlug}-%`))))
+      .map((item) => item.slug),
+  );
+  let slug = baseSlug;
+  for (let suffix = 2; existingSlugs.has(slug); suffix += 1) slug = `${baseSlug}-${suffix}`;
+  const productInput = { ...input, slug };
 
   await db.batch([
     db.insert(products).values({
       id,
-      ...input,
+      ...productInput,
       status: "draft",
       isFeatured: false,
       sortOrder: 999,
@@ -114,7 +130,7 @@ export async function createAdminProduct(input: NewProduct, actorUserId: string)
       action: "product.created",
       entityType: "product",
       entityId: id,
-      changesJson: JSON.stringify(input),
+      changesJson: JSON.stringify(productInput),
     }),
   ]);
 
