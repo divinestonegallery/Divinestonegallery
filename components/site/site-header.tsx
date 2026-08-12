@@ -14,7 +14,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { FormEvent, useEffect, useId, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useId, useRef, useState } from "react";
 import { AccountControl } from "@/features/auth/account-control";
 import { useEnquiryBag, useSavedWorks } from "@/features/customer/device-collections";
 import styles from "./site-shell.module.css";
@@ -55,16 +55,27 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
   const savedWorks = useSavedWorks();
   const enquiryBag = useEnquiryBag();
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
+  const [megaMenuClosing, setMegaMenuClosing] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [logoAnimationFinished, setLogoAnimationFinished] = useState(false);
   const [deityLinks, setDeityLinks] = useState<ReadonlyArray<readonly [string, string]>>(defaultDeityLinks);
   const logoVideoRef = useRef<HTMLVideoElement>(null);
-  const menuTriggerRef = useRef<HTMLButtonElement>(null);
-  const searchTriggerRef = useRef<HTMLButtonElement>(null);
+  const shopTriggerRef = useRef<HTMLButtonElement>(null);
+  const megaMenuRef = useRef<HTMLDivElement>(null);
   const searchPanelRef = useRef<HTMLElement>(null);
   const mobilePanelRef = useRef<HTMLDivElement>(null);
   const searchTitleId = useId();
+  const shopMenuId = useId();
+
+  const closeMegaMenu = useCallback(() => {
+    if (megaMenuOpen && !megaMenuClosing) setMegaMenuClosing(true);
+  }, [megaMenuClosing, megaMenuOpen]);
+
+  const openMegaMenu = useCallback(() => {
+    setMegaMenuClosing(false);
+    setMegaMenuOpen(true);
+  }, []);
 
   useEffect(() => {
     if (animateLogo && logoVideoRef.current) logoVideoRef.current.playbackRate = 2.5;
@@ -105,7 +116,7 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
       if (event.key === "Escape") {
         setMobileMenuOpen(false);
         setSearchOpen(false);
-        setMegaMenuOpen(false);
+        closeMegaMenu();
         return;
       }
       if (!overlayOpen || event.key !== "Tab" || !focusable.length) return;
@@ -126,7 +137,21 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
       window.removeEventListener("keydown", handleEscape);
       if (overlayOpen) previouslyFocused?.focus();
     };
-  }, [mobileMenuOpen, searchOpen]);
+  }, [closeMegaMenu, mobileMenuOpen, searchOpen]);
+
+  useEffect(() => {
+    if (!megaMenuOpen) return;
+
+    const handleOutsidePointer = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (megaMenuRef.current?.contains(target) || shopTriggerRef.current?.contains(target)) return;
+      closeMegaMenu();
+    };
+
+    document.addEventListener("pointerdown", handleOutsidePointer, true);
+    return () => document.removeEventListener("pointerdown", handleOutsidePointer, true);
+  }, [closeMegaMenu, megaMenuOpen]);
 
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     const form = event.currentTarget;
@@ -152,7 +177,6 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
       <header className={styles.siteHeader}>
         <div className={`${styles.headerMain} site-container`}>
           <button
-            ref={menuTriggerRef}
             className={`${styles.headerAction} ${styles.mobileMenuButton}`}
             type="button"
             aria-label="Open menu"
@@ -188,14 +212,15 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
 
           <nav className={styles.desktopNav} aria-label="Main navigation">
             <button
-              ref={searchTriggerRef}
+              ref={shopTriggerRef}
               className={styles.navLink}
               type="button"
+              aria-controls={shopMenuId}
               aria-expanded={megaMenuOpen}
-              onClick={() => setMegaMenuOpen((open) => !open)}
+              onClick={() => megaMenuOpen ? closeMegaMenu() : openMegaMenu()}
             >
               Shop
-              <span aria-hidden="true" className={styles.chevron}>⌄</span>
+              <span aria-hidden="true" className={`${styles.chevron} ${megaMenuOpen && !megaMenuClosing ? styles.chevronOpen : ""}`}>⌄</span>
             </button>
             {mainLinks.map(([label, href]) => (
               <Link className={styles.navLink} href={href} key={href}>
@@ -236,18 +261,26 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
         </div>
 
         {megaMenuOpen ? (
-          <div className={styles.megaMenuWrap}>
+          <div className={`${styles.megaMenuWrap} ${megaMenuClosing ? styles.megaMenuClosing : ""}`} id={shopMenuId}>
             <button
               className={styles.megaBackdrop}
               type="button"
               aria-label="Close Shop menu"
-              onClick={() => setMegaMenuOpen(false)}
+              onClick={closeMegaMenu}
             />
-            <div className={`${styles.megaMenu} site-container`}>
+            <div
+              className={`${styles.megaMenu} site-container`}
+              ref={megaMenuRef}
+              onAnimationEnd={(event) => {
+                if (!megaMenuClosing || event.currentTarget !== event.target) return;
+                setMegaMenuOpen(false);
+                setMegaMenuClosing(false);
+              }}
+            >
               <div className={styles.megaColumn}>
                 <p>Shop by deity</p>
                 {deityLinks.map(([label, href]) => (
-                  <Link href={href} key={href} onClick={() => setMegaMenuOpen(false)}>
+                  <Link href={href} key={href} onClick={closeMegaMenu}>
                     {label}
                   </Link>
                 ))}
@@ -255,7 +288,7 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
               <div className={styles.megaColumn}>
                 <p>Shop by material</p>
                 {materialLinks.map(([label, href]) => (
-                  <Link href={href} key={href} onClick={() => setMegaMenuOpen(false)}>
+                  <Link href={href} key={href} onClick={closeMegaMenu}>
                     {label}
                   </Link>
                 ))}
@@ -263,7 +296,7 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
               <div className={styles.megaColumn}>
                 <p>Featured</p>
                 {featuredLinks.map(([label, href]) => (
-                  <Link href={href} key={href} onClick={() => setMegaMenuOpen(false)}>
+                  <Link href={href} key={href} onClick={closeMegaMenu}>
                     {label}
                   </Link>
                 ))}
@@ -271,7 +304,7 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
               <Link
                 className={styles.megaFeature}
                 href="/custom-murti"
-                onClick={() => setMegaMenuOpen(false)}
+                onClick={closeMegaMenu}
               >
                 <Sparkles aria-hidden="true" size={24} strokeWidth={1.4} />
                 <span>Commission a sacred work</span>
