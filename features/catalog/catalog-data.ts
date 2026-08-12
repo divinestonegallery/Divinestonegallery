@@ -20,6 +20,7 @@ export type CatalogItem = {
   stockQuantity?: number;
   inventoryKind?: "unique" | "repeatable";
   salesMode?: "direct" | "quote" | "both";
+  weightMinGrams?: number | null;
   weightGrams?: number | null;
 };
 

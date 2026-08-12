@@ -133,6 +133,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
               <dl className={styles.specificationGrid}>
                 <div><dt><Ruler aria-hidden="true" size={17} /> Height</dt><dd>{product.height} inches</dd></div>
+                {product.weightGrams ? <div><dt>Weight</dt><dd>{product.weightMinGrams ? `${Number((product.weightMinGrams / 1000).toFixed(1))}–${Number((product.weightGrams / 1000).toFixed(1))} kg` : `${Number((product.weightGrams / 1000).toFixed(1))} kg`}</dd></div> : null}
                 <div><dt><Gem aria-hidden="true" size={17} /> Material</dt><dd>{product.material}</dd></div>
                 <div><dt><Sparkles aria-hidden="true" size={17} /> Finish</dt><dd>{product.finish}</dd></div>
                 <div><dt><HandHeart aria-hidden="true" size={17} /> Made by</dt><dd>Master moortikars</dd></div>

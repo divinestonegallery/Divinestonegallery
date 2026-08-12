@@ -17,6 +17,7 @@ type Variant = {
   heightMm: number;
   widthMm: number | null;
   depthMm: number | null;
+  weightMinGrams: number | null;
   weightGrams: number | null;
   packageLengthMm: number | null;
   packageWidthMm: number | null;
@@ -90,6 +91,8 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
   const [heightInches, setHeightInches] = useState(inchesFromMm(variant?.heightMm));
   const [priceRupees, setPriceRupees] = useState(variant?.pricePaise ? String(variant.pricePaise / 100) : "");
   const [gstPercent, setGstPercent] = useState(variant?.gstRateBps ? String(variant.gstRateBps / 100) : "");
+  const [weightMode, setWeightMode] = useState<"exact" | "range">(variant?.weightMinGrams ? "range" : "exact");
+  const [weightMinKg, setWeightMinKg] = useState(variant?.weightMinGrams ? String(variant.weightMinGrams / 1000) : "");
   const [weightKg, setWeightKg] = useState(variant?.weightGrams ? String(variant.weightGrams / 1000) : "");
   const [widthInches, setWidthInches] = useState(inchesFromMm(variant?.widthMm));
   const [depthInches, setDepthInches] = useState(inchesFromMm(variant?.depthMm));
@@ -150,6 +153,7 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
             pricePaise: priceRupees ? Math.round(Number(priceRupees) * 100) : null,
             gstRateBps: gstPercent ? Math.round(Number(gstPercent) * 100) : null,
             heightMm: mmFromInches(heightInches),
+            weightMinGrams: weightMode === "range" && weightMinKg ? Math.round(Number(weightMinKg) * 1000) : null,
             weightGrams: weightKg ? Math.round(Number(weightKg) * 1000) : null,
             widthMm: mmFromInches(widthInches),
             depthMm: mmFromInches(depthInches),
@@ -222,7 +226,9 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
         <label><span>Price before GST (₹)</span><input inputMode="decimal" value={priceRupees} onChange={(event) => setPriceRupees(event.target.value)} placeholder="Not entered" /></label>
         <label><span>GST rate (%)</span><input inputMode="decimal" value={gstPercent} onChange={(event) => setGstPercent(event.target.value)} placeholder="Add after GST registration" /></label>
         <label><span>Sculpture height (inches)</span><input inputMode="decimal" min="0.1" step="0.1" required value={heightInches} onChange={(event) => setHeightInches(event.target.value)} /></label>
-        <label><span>Weight (kg)</span><input inputMode="decimal" value={weightKg} onChange={(event) => setWeightKg(event.target.value)} placeholder="Needed for shipping" /></label>
+        <label><span>Weight entry</span><select value={weightMode} onChange={(event) => setWeightMode(event.target.value as "exact" | "range")}><option value="exact">Exact weight</option><option value="range">Weight range</option></select></label>
+        {weightMode === "range" ? <label><span>Minimum weight (kg)</span><input inputMode="decimal" min="0.1" step="0.1" value={weightMinKg} onChange={(event) => setWeightMinKg(event.target.value)} placeholder="For example, 40" /></label> : null}
+        <label><span>{weightMode === "range" ? "Maximum weight (kg)" : "Exact weight (kg)"}</span><input inputMode="decimal" min="0.1" step="0.1" value={weightKg} onChange={(event) => setWeightKg(event.target.value)} placeholder="Needed for shipping" /></label>
         <label><span>Sculpture width (inches)</span><input inputMode="decimal" value={widthInches} onChange={(event) => setWidthInches(event.target.value)} placeholder="Optional" /></label>
         <label><span>Sculpture depth (inches)</span><input inputMode="decimal" value={depthInches} onChange={(event) => setDepthInches(event.target.value)} placeholder="Optional" /></label>
         <label><span>Packed length (inches)</span><input inputMode="decimal" value={packageLengthInches} onChange={(event) => setPackageLengthInches(event.target.value)} placeholder="Required for rates" /></label>

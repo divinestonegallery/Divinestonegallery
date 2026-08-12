@@ -11,6 +11,7 @@ export function parseNewVariant(body: JsonObject): ParseResult<NewVariant> {
   const heightMm = optionalInteger(body.heightMm, 1);
   const widthMm = optionalInteger(body.widthMm, 1);
   const depthMm = optionalInteger(body.depthMm, 1);
+  const weightMinGrams = optionalInteger(body.weightMinGrams, 1);
   const weightGrams = optionalInteger(body.weightGrams, 1);
   const packageLengthMm = optionalInteger(body.packageLengthMm, 1);
   const packageWidthMm = optionalInteger(body.packageWidthMm, 1);
@@ -25,10 +26,11 @@ export function parseNewVariant(body: JsonObject): ParseResult<NewVariant> {
   const codEligible = typeof body.codEligible === "boolean" ? body.codEligible : true;
 
   if (!sku || !name || !material || !heightMm) return { error: "SKU, variant name, material and height are required." };
-  if (widthMm === undefined || depthMm === undefined || weightGrams === undefined || packageLengthMm === undefined || packageWidthMm === undefined || packageHeightMm === undefined || pricePaise === undefined || gstRateBps === undefined || parsedStockQuantity === undefined || parsedLowStockThreshold === undefined) return { error: "A numeric variant value is invalid." };
+  if (widthMm === undefined || depthMm === undefined || weightMinGrams === undefined || weightGrams === undefined || packageLengthMm === undefined || packageWidthMm === undefined || packageHeightMm === undefined || pricePaise === undefined || gstRateBps === undefined || parsedStockQuantity === undefined || parsedLowStockThreshold === undefined) return { error: "A numeric variant value is invalid." };
+  if (weightMinGrams !== null && (weightGrams === null || weightMinGrams > weightGrams)) return { error: "The minimum weight cannot exceed the maximum weight." };
   if (gstRateBps !== null && gstRateBps > 10000) return { error: "GST rate cannot exceed 100%." };
 
-  return { value: { sku, name, material, finish, heightMm, widthMm, depthMm, weightGrams, packageLengthMm, packageWidthMm, packageHeightMm, pricePaise, gstRateBps, inventoryKind, stockQuantity, lowStockThreshold, codEligible } };
+  return { value: { sku, name, material, finish, heightMm, widthMm, depthMm, weightMinGrams, weightGrams, packageLengthMm, packageWidthMm, packageHeightMm, pricePaise, gstRateBps, inventoryKind, stockQuantity, lowStockThreshold, codEligible } };
 }
 
 export function parseVariantPatch(body: JsonObject): ParseResult<VariantPatch> {
@@ -43,7 +45,7 @@ export function parseVariantPatch(body: JsonObject): ParseResult<VariantPatch> {
   }
   if ("finish" in body) patch.finish = optionalString(body.finish, 160);
 
-  const numberFields = ["heightMm", "widthMm", "depthMm", "weightGrams", "packageLengthMm", "packageWidthMm", "packageHeightMm", "pricePaise", "gstRateBps", "stockQuantity", "lowStockThreshold"] as const;
+  const numberFields = ["heightMm", "widthMm", "depthMm", "weightMinGrams", "weightGrams", "packageLengthMm", "packageWidthMm", "packageHeightMm", "pricePaise", "gstRateBps", "stockQuantity", "lowStockThreshold"] as const;
   for (const field of numberFields) {
     if (field in body) {
       const minimum = field === "pricePaise" || field === "gstRateBps" || field === "stockQuantity" || field === "lowStockThreshold" ? 0 : 1;
@@ -52,6 +54,7 @@ export function parseVariantPatch(body: JsonObject): ParseResult<VariantPatch> {
       if (field === "heightMm") patch.heightMm = value!;
       if (field === "widthMm") patch.widthMm = value;
       if (field === "depthMm") patch.depthMm = value;
+      if (field === "weightMinGrams") patch.weightMinGrams = value;
       if (field === "weightGrams") patch.weightGrams = value;
       if (field === "packageLengthMm") patch.packageLengthMm = value;
       if (field === "packageWidthMm") patch.packageWidthMm = value;
@@ -62,6 +65,7 @@ export function parseVariantPatch(body: JsonObject): ParseResult<VariantPatch> {
       if (field === "lowStockThreshold") patch.lowStockThreshold = value!;
     }
   }
+  if (patch.weightMinGrams !== undefined && patch.weightGrams !== undefined && patch.weightMinGrams !== null && (patch.weightGrams === null || patch.weightMinGrams > patch.weightGrams)) return { error: "The minimum weight cannot exceed the maximum weight." };
   if (patch.gstRateBps !== undefined && patch.gstRateBps !== null && patch.gstRateBps > 10000) return { error: "GST rate cannot exceed 100%." };
   if ("inventoryKind" in body) { const value = enumValue(body.inventoryKind, ["unique", "repeatable"] as const); if (!value) return { error: "Inventory type is invalid." }; patch.inventoryKind = value; }
   if ("codEligible" in body) { if (typeof body.codEligible !== "boolean") return { error: "COD eligibility must be true or false." }; patch.codEligible = body.codEligible; }

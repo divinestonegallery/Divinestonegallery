@@ -36,6 +36,7 @@ async function readDatabaseCatalog(): Promise<CatalogItem[]> {
       material: productVariants.material,
       finish: productVariants.finish,
       heightMm: productVariants.heightMm,
+      weightMinGrams: productVariants.weightMinGrams,
       weightGrams: productVariants.weightGrams,
       pricePaise: productVariants.pricePaise,
       gstRateBps: productVariants.gstRateBps,
@@ -96,6 +97,7 @@ async function readDatabaseCatalog(): Promise<CatalogItem[]> {
       stockQuantity: row.stockQuantity ?? undefined,
       inventoryKind: row.inventoryKind ?? undefined,
       salesMode: row.salesMode,
+      weightMinGrams: row.weightMinGrams,
       weightGrams: row.weightGrams,
     } satisfies CatalogItem];
   });

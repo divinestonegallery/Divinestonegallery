@@ -234,6 +234,7 @@ export const productVariants = pgTable(
     heightMm: integer("height_mm").notNull(),
     widthMm: integer("width_mm"),
     depthMm: integer("depth_mm"),
+    weightMinGrams: integer("weight_min_grams"),
     weightGrams: integer("weight_grams"),
     packageLengthMm: integer("package_length_mm"),
     packageWidthMm: integer("package_width_mm"),
@@ -257,6 +258,10 @@ export const productVariants = pgTable(
     check(
       "product_variants_weight_positive",
       sql`${table.weightGrams} is null or ${table.weightGrams} > 0`,
+    ),
+    check(
+      "product_variants_weight_range_valid",
+      sql`${table.weightMinGrams} is null or (${table.weightMinGrams} > 0 and ${table.weightGrams} is not null and ${table.weightMinGrams} <= ${table.weightGrams})`,
     ),
     check(
       "product_variants_package_dimensions_positive",

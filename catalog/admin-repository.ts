@@ -177,6 +177,7 @@ export type NewVariant = {
   heightMm: number;
   widthMm: number | null;
   depthMm: number | null;
+  weightMinGrams: number | null;
   weightGrams: number | null;
   packageLengthMm: number | null;
   packageWidthMm: number | null;

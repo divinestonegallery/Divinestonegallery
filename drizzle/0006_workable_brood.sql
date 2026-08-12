@@ -1,0 +1,2 @@
+ALTER TABLE "product_variants" ADD COLUMN "weight_min_grams" integer;--> statement-breakpoint
+ALTER TABLE "product_variants" ADD CONSTRAINT "product_variants_weight_range_valid" CHECK ("product_variants"."weight_min_grams" is null or ("product_variants"."weight_min_grams" > 0 and "product_variants"."weight_grams" is not null and "product_variants"."weight_min_grams" <= "product_variants"."weight_grams"));

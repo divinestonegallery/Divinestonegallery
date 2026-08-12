@@ -43,6 +43,13 @@
       "when": 1786277123608,
       "tag": "0005_majestic_tag",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786555555435,
+      "tag": "0006_workable_brood",
+      "breakpoints": true
     }
   ]
 }
