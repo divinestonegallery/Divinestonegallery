@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "deploy:check": "node --env-file-if-exists=.env.local scripts/check-deployment.mjs",
     "release:verify": "npm run deploy:check && npm test && npm run lint",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "node --env-file-if-exists=.env.local ./node_modules/drizzle-kit/bin.cjs migrate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",
