@@ -29,7 +29,11 @@ function items(section: PublishedSection) {
   try { const parsed = JSON.parse(section.contentJson) as unknown; return Array.isArray(parsed) && parsed.length ? parsed.slice(0, 30) as Item[] : fallback; }
   catch { return fallback; }
 }
-function action(label: string | null, href: string | null, secondary = false) { return label && href ? <Link className={secondary ? styles.secondary : styles.primary} href={href}>{label}<ArrowRight size={15} /></Link> : null; }
+function customerFacingLabel(label: string) {
+  return /^commission a (murti|moorti)$/i.test(label.trim()) ? "Customize Your Moorti" : label;
+}
+
+function action(label: string | null, href: string | null, secondary = false) { return label && href ? <Link className={secondary ? styles.secondary : styles.primary} href={href}>{customerFacingLabel(label)}<ArrowRight size={15} /></Link> : null; }
 
 function Block({ section, first, homeHero }: { section: PublishedSection; first: boolean; homeHero: boolean }) {
   const rows = items(section); const image = section.mediaPath ?? fallbackImages[section.sectionKey] ?? (first ? fallbackImages.hero : null);

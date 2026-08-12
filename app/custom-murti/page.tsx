@@ -62,7 +62,7 @@ function StaticCustomMurtiPage() {
               <div className={styles.heroCopy}>
                 <p className={styles.eyebrow}>A sacred work, made personally</p>
                 <h1 className="font-display">Your vision,{" "}<span>shaped in marble.</span></h1>
-                <p>Commission a murti created around your deity, sacred space and preferred expression—guided personally by our fourth-generation family atelier.</p>
+                <p>Customize Your Moorti around your deity, sacred space and preferred expression—guided personally by our fourth-generation family atelier.</p>
                 <div className={styles.heroActions}>
                   <a className={buttonClassName({ size: "lg" })} href="#consultation">Begin your consultation <ArrowRight aria-hidden="true" size={18} /></a>
                   <a className={buttonClassName({ variant: "outline", size: "lg" })} href="https://wa.me/919166138566?text=Namaste%2C%20I%20would%20like%20to%20discuss%20a%20custom%20murti." target="_blank" rel="noreferrer"><MessageCircle aria-hidden="true" size={18} /> Ask on WhatsApp</a>

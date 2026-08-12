@@ -167,7 +167,7 @@ function StaticOurStoryPage() {
             <h2 className="font-display">Find a sacred work—or begin one of your own.</h2>
             <div>
               <Link className={buttonClassName({ size: "lg" })} href="/shop">Explore the gallery <ArrowRight aria-hidden="true" size={18} /></Link>
-              <Link className={buttonClassName({ variant: "outline", size: "lg" })} href="/custom-murti">Commission a murti</Link>
+              <Link className={buttonClassName({ variant: "outline", size: "lg" })} href="/custom-murti">Customize Your Moorti</Link>
             </div>
           </div>
         </section>

@@ -148,7 +148,7 @@ function StaticHome() {
                   Explore moorties <ArrowRight aria-hidden="true" size={18} />
                 </Link>
                 <Link className={buttonClassName({ variant: "outline", size: "lg" })} href="/custom-murti">
-                  Commission a murti
+                  Customize Your Moorti
                 </Link>
               </div>
               <div className={styles.heroProof}>
