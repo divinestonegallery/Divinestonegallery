@@ -12,7 +12,6 @@ import {
   optionalString,
   readJsonObject,
   requiredString,
-  slugValue,
 } from "@/catalog/input";
 
 export const dynamic = "force-dynamic";
@@ -51,20 +50,19 @@ export async function POST(request: Request) {
 
   const kind = entityKind(body.kind);
   const name = requiredString(body.name, 180);
-  const slug = slugValue(body.slug);
   const description = optionalString(body.description, 1000);
   const sortOrder = optionalInteger(body.sortOrder, 0) ?? 0;
   const isActive = typeof body.isActive === "boolean" ? body.isActive : true;
   const isFeatured = typeof body.isFeatured === "boolean" ? body.isFeatured : false;
-  if (!kind || !name || !slug || description === undefined || sortOrder === undefined) {
-    return Response.json({ error: { code: "INVALID_CATALOG_ENTITY", message: "Name, slug and valid catalogue details are required." } }, { status: 400 });
+  if (!kind || !name || description === undefined || sortOrder === undefined) {
+    return Response.json({ error: { code: "INVALID_CATALOG_ENTITY", message: "A name and valid catalogue details are required." } }, { status: 400 });
   }
 
   try {
-    const data = await createAdminCatalogEntity(kind, { name, slug, description, sortOrder, isActive, isFeatured }, authorization.userId);
+    const data = await createAdminCatalogEntity(kind, { name, description, sortOrder, isActive, isFeatured }, authorization.userId);
     return Response.json({ data }, { status: 201 });
   } catch {
-    return Response.json({ error: { code: "CATALOG_ENTITY_CONFLICT", message: "That name or URL slug is already in use." } }, { status: 409 });
+    return Response.json({ error: { code: "CATALOG_ENTITY_CONFLICT", message: "That catalogue item could not be created." } }, { status: 409 });
   }
 }
 
@@ -80,7 +78,6 @@ export async function PATCH(request: Request) {
 
   const patch: CatalogEntityPatch = {};
   if ("name" in body) { const value = requiredString(body.name, 180); if (!value) return Response.json({ error: { code: "INVALID_NAME", message: "Name is invalid." } }, { status: 400 }); patch.name = value; }
-  if ("slug" in body) { const value = slugValue(body.slug); if (!value) return Response.json({ error: { code: "INVALID_SLUG", message: "URL slug is invalid." } }, { status: 400 }); patch.slug = value; }
   if ("description" in body) { const value = optionalString(body.description, 1000); if (value === undefined) return Response.json({ error: { code: "INVALID_DESCRIPTION", message: "Description is too long." } }, { status: 400 }); patch.description = value; }
   if ("sortOrder" in body) { const value = optionalInteger(body.sortOrder, 0); if (value === undefined || value === null) return Response.json({ error: { code: "INVALID_SORT_ORDER", message: "Display order must be zero or greater." } }, { status: 400 }); patch.sortOrder = value; }
   if ("isActive" in body) { if (typeof body.isActive !== "boolean") return Response.json({ error: { code: "INVALID_STATUS", message: "Active status must be true or false." } }, { status: 400 }); patch.isActive = body.isActive; }

@@ -10,6 +10,7 @@ import {
   products,
   productVariants,
 } from "@/db/schema";
+import { nextAvailableSlug, slugFromName } from "@/catalog/slug";
 
 async function database() {
   const { getDb } = await import("@/db");
@@ -98,22 +99,13 @@ export async function createAdminProduct(input: NewProduct, actorUserId: string)
   const db = await database();
   const id = `prd:${crypto.randomUUID()}`;
   const auditId = crypto.randomUUID();
-  const baseSlug = input.name
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 140) || "moorti";
-  const existingSlugs = new Set(
-    (await db
+  const baseSlug = slugFromName(input.name, "moorti");
+  const existingSlugs = (await db
       .select({ slug: products.slug })
       .from(products)
       .where(or(eq(products.slug, baseSlug), like(products.slug, `${baseSlug}-%`))))
-      .map((item) => item.slug),
-  );
-  let slug = baseSlug;
-  for (let suffix = 2; existingSlugs.has(slug); suffix += 1) slug = `${baseSlug}-${suffix}`;
+    .map((item) => item.slug);
+  const slug = nextAvailableSlug(baseSlug, existingSlugs);
   const productInput = { ...input, slug };
 
   await db.batch([

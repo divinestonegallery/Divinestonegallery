@@ -31,7 +31,6 @@ const sections: Array<{ kind: Kind; key: keyof Payload; title: string; descripti
 function CatalogRow({ item, kind, onSaved }: { item: CatalogItem; kind: Kind; onSaved: (data: Payload) => void }) {
   const { showToast } = useToast();
   const [name, setName] = useState(item.name);
-  const [slug, setSlug] = useState(item.slug);
   const [description, setDescription] = useState(item.description ?? "");
   const [sortOrder, setSortOrder] = useState(String(item.sortOrder));
   const [isFeatured, setIsFeatured] = useState(Boolean(item.isFeatured));
@@ -47,7 +46,6 @@ function CatalogRow({ item, kind, onSaved }: { item: CatalogItem; kind: Kind; on
           kind,
           id: item.id,
           name,
-          slug,
           ...(kind !== "deity" ? { description } : {}),
           sortOrder: Number(sortOrder),
           ...(kind === "collection" ? { isFeatured } : {}),
@@ -59,7 +57,7 @@ function CatalogRow({ item, kind, onSaved }: { item: CatalogItem; kind: Kind; on
       onSaved(payload.data);
       showToast(`${name} updated.`);
     } catch {
-      showToast(`Could not update ${item.name}. Check the name and URL slug.`);
+      showToast(`Could not update ${item.name}. Check the details and try again.`);
     } finally {
       setSaving(false);
     }
@@ -69,13 +67,12 @@ function CatalogRow({ item, kind, onSaved }: { item: CatalogItem; kind: Kind; on
     <details className={styles.structureRow}>
       <summary>
         <span className={item.isActive ? styles.liveDot : styles.inactiveDot} />
-        <span><strong>{item.name}</strong><small>/{item.slug} · {item.productCount} product{item.productCount === 1 ? "" : "s"}</small></span>
+        <span><strong>{item.name}</strong><small>{item.productCount} product{item.productCount === 1 ? "" : "s"}</small></span>
         {kind === "collection" && item.isFeatured ? <em>Featured</em> : null}
         <span>{item.isActive ? "Active" : "Hidden"}</span>
       </summary>
       <div className={styles.structureEditor}>
         <label><span>Name</span><input value={name} onChange={(event) => setName(event.target.value)} /></label>
-        <label><span>URL slug</span><input value={slug} onChange={(event) => setSlug(event.target.value)} /></label>
         <label><span>Display order</span><input inputMode="numeric" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)} /></label>
         {kind !== "deity" ? <label className={styles.wideField}><span>Description</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} /></label> : null}
         {kind === "collection" ? <label className={styles.checkField}><input type="checkbox" checked={isFeatured} onChange={(event) => setIsFeatured(event.target.checked)} /><span>Feature this collection</span></label> : null}
@@ -130,7 +127,7 @@ export function CatalogStructureAdmin() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ kind, ...Object.fromEntries(form), isActive: true, isFeatured: form.get("isFeatured") === "on" }),
     });
-    if (!response.ok) { showToast("This item could not be created. The URL slug may already be in use."); return; }
+    if (!response.ok) { showToast("This item could not be created. Check the details and try again."); return; }
     setData((await response.json() as { data: Payload }).data);
     setCreating(null);
     showToast(`${kind[0].toUpperCase()}${kind.slice(1)} created.`);
@@ -149,7 +146,6 @@ export function CatalogStructureAdmin() {
             {creating === kind ? (
               <form className={styles.createStructure} onSubmit={(event) => void create(event, kind)}>
                 <label><span>Name</span><input name="name" required maxLength={180} /></label>
-                <label><span>URL slug</span><input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" /></label>
                 <label><span>Display order</span><input name="sortOrder" type="number" min="0" defaultValue="0" /></label>
                 {kind !== "deity" ? <label><span>Description</span><textarea name="description" rows={2} maxLength={1000} /></label> : null}
                 {kind === "collection" ? <label className={styles.checkField}><input type="checkbox" name="isFeatured" /><span>Feature this collection</span></label> : null}

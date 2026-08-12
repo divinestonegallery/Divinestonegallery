@@ -1,5 +1,6 @@
-import { asc, desc, eq, max, sql } from "drizzle-orm";
+import { asc, desc, eq, like, max, or, sql } from "drizzle-orm";
 import { auditLogs, mediaAssets, sitePages, sitePageVersions, siteSections } from "@/db/schema";
+import { nextAvailableSlug, slugFromName } from "@/catalog/slug";
 
 async function database() {
   const { getDb } = await import("@/db");
@@ -64,7 +65,6 @@ export async function listAdminSitePages() {
 
 export type NewSitePage = {
   title: string;
-  slug: string;
   navigationTitle: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
@@ -73,9 +73,13 @@ export type NewSitePage = {
 export async function createAdminSitePage(input: NewSitePage, actorUserId: string) {
   const db = await database();
   const id = `page:${crypto.randomUUID()}`;
+  const baseSlug = slugFromName(input.title, "page");
+  const existingSlugs = (await db.select({ slug: sitePages.slug }).from(sitePages).where(or(eq(sitePages.slug, baseSlug), like(sitePages.slug, `${baseSlug}-%`)))).map((item) => item.slug);
+  const slug = nextAvailableSlug(baseSlug, existingSlugs);
+  const pageInput = { ...input, slug };
   await db.batch([
-    db.insert(sitePages).values({ id, ...input, status: "draft", isSystem: false }),
-    db.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId, action: "site_page.created", entityType: "site_page", entityId: id, changesJson: JSON.stringify(input) }),
+    db.insert(sitePages).values({ id, ...pageInput, status: "draft", isSystem: false }),
+    db.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId, action: "site_page.created", entityType: "site_page", entityId: id, changesJson: JSON.stringify(pageInput) }),
   ]);
   return listAdminSitePages();
 }

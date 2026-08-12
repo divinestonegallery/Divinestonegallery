@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq, like, or, sql } from "drizzle-orm";
 import {
   auditLogs,
   categories,
@@ -7,6 +7,7 @@ import {
   productCollections,
   products,
 } from "@/db/schema";
+import { nextAvailableSlug, slugFromName } from "@/catalog/slug";
 
 export type CatalogEntityKind = "category" | "deity" | "collection";
 
@@ -43,7 +44,6 @@ export async function listAdminCatalogStructure() {
 
 type NewCatalogEntity = {
   name: string;
-  slug: string;
   description: string | null;
   sortOrder: number;
   isActive: boolean;
@@ -57,10 +57,17 @@ export async function createAdminCatalogEntity(
 ) {
   const db = await database();
   const id = `${kind.slice(0, 3)}:${crypto.randomUUID()}`;
+  const baseSlug = slugFromName(input.name, kind);
+  const existingRows = kind === "category"
+    ? await db.select({ slug: categories.slug }).from(categories).where(or(eq(categories.slug, baseSlug), like(categories.slug, `${baseSlug}-%`)))
+    : kind === "deity"
+      ? await db.select({ slug: deities.slug }).from(deities).where(or(eq(deities.slug, baseSlug), like(deities.slug, `${baseSlug}-%`)))
+      : await db.select({ slug: collections.slug }).from(collections).where(or(eq(collections.slug, baseSlug), like(collections.slug, `${baseSlug}-%`)));
+  const slug = nextAvailableSlug(baseSlug, existingRows.map((item) => item.slug));
   const values = {
     id,
     name: input.name,
-    slug: input.slug,
+    slug,
     sortOrder: input.sortOrder,
     isActive: input.isActive,
   };
@@ -83,7 +90,7 @@ export async function createAdminCatalogEntity(
       action: `${kind}.created`,
       entityType: kind,
       entityId: id,
-      changesJson: JSON.stringify(input),
+      changesJson: JSON.stringify({ ...input, slug }),
     }),
   ] as unknown as Parameters<typeof db.batch>[0]);
 

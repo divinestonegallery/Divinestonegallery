@@ -60,12 +60,11 @@ export async function POST(request: Request) {
   try {
     if (entity === "page") {
       const title = requiredString(body.title, 180);
-      const slug = slugValue(body.slug);
       const navigationTitle = nullableString(body.navigationTitle, 100);
       const seoTitle = nullableString(body.seoTitle, 180);
       const seoDescription = nullableString(body.seoDescription, 320);
-      if (!title || !slug || navigationTitle === undefined || seoTitle === undefined || seoDescription === undefined) throw new Error("INVALID");
-      return Response.json({ data: await createAdminSitePage({ title, slug, navigationTitle, seoTitle, seoDescription }, authorization.userId) }, { status: 201 });
+      if (!title || navigationTitle === undefined || seoTitle === undefined || seoDescription === undefined) throw new Error("INVALID");
+      return Response.json({ data: await createAdminSitePage({ title, navigationTitle, seoTitle, seoDescription }, authorization.userId) }, { status: 201 });
     }
     if (entity === "duplicate_section") {
       const id = requiredString(body.id, 140);
@@ -90,7 +89,7 @@ export async function POST(request: Request) {
     }
     throw new Error("INVALID");
   } catch {
-    return Response.json({ error: { code: "PAGE_CREATE_FAILED", message: "The page or section could not be created. Check slugs, links and content." } }, { status: 409 });
+    return Response.json({ error: { code: "PAGE_CREATE_FAILED", message: "The page or section could not be created. Check links and content." } }, { status: 409 });
   }
 }
 
@@ -106,7 +105,6 @@ export async function PATCH(request: Request) {
     if (entity === "page") {
       const patch: SitePagePatch = {};
       if ("title" in body) { const value = requiredString(body.title, 180); if (!value) throw new Error("INVALID"); patch.title = value; }
-      if ("slug" in body) { const value = slugValue(body.slug); if (!value) throw new Error("INVALID"); patch.slug = value; }
       if ("navigationTitle" in body) { const value = nullableString(body.navigationTitle, 100); if (value === undefined) throw new Error("INVALID"); patch.navigationTitle = value; }
       if ("seoTitle" in body) { const value = nullableString(body.seoTitle, 180); if (value === undefined) throw new Error("INVALID"); patch.seoTitle = value; }
       if ("seoDescription" in body) { const value = nullableString(body.seoDescription, 320); if (value === undefined) throw new Error("INVALID"); patch.seoDescription = value; }
