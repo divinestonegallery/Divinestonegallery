@@ -60,7 +60,7 @@ function completion(product: AdminProduct) {
   const checks = [
     Boolean(product.media.some((media) => media.publicPath)),
     Boolean(variant?.pricePaise),
-    Boolean(variant?.gstRateBps),
+    variant?.gstRateBps !== null && variant?.gstRateBps !== undefined,
     Boolean(variant?.weightGrams),
     Boolean(variant?.packageLengthMm && variant?.packageWidthMm && variant?.packageHeightMm),
     Boolean(variant && variant.stockQuantity > 0),
@@ -90,7 +90,7 @@ function ProductEditor({ product, lookups, refresh }: { product: AdminProduct; l
   const variant = product.variants[0];
   const [heightInches, setHeightInches] = useState(inchesFromMm(variant?.heightMm));
   const [priceRupees, setPriceRupees] = useState(variant?.pricePaise ? String(variant.pricePaise / 100) : "");
-  const [gstPercent, setGstPercent] = useState(variant?.gstRateBps ? String(variant.gstRateBps / 100) : "");
+  const [gstPercent, setGstPercent] = useState(variant?.gstRateBps !== null && variant?.gstRateBps !== undefined ? String(variant.gstRateBps / 100) : "");
   const [weightMode, setWeightMode] = useState<"exact" | "range">(variant?.weightMinGrams ? "range" : "exact");
   const [weightMinKg, setWeightMinKg] = useState(variant?.weightMinGrams ? String(variant.weightMinGrams / 1000) : "");
   const [weightKg, setWeightKg] = useState(variant?.weightGrams ? String(variant.weightGrams / 1000) : "");
