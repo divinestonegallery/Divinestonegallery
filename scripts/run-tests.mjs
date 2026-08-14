@@ -14,10 +14,11 @@ async function availablePort() {
   });
 }
 
-async function waitUntilReady(url, child) {
+async function waitUntilReady(url, children) {
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
-    if (child.exitCode != null) throw new Error(`Next.js test server exited with code ${child.exitCode}`);
+    const stopped = children.find((child) => child.exitCode != null);
+    if (stopped) throw new Error(`Next.js test server exited with code ${stopped.exitCode}`);
     try {
       const response = await fetch(url);
       if (response.status < 500) return;
@@ -29,19 +30,33 @@ async function waitUntilReady(url, child) {
   throw new Error("Next.js test server did not become ready within 30 seconds");
 }
 
-const port = await availablePort();
-if (!port) throw new Error("Could not reserve a local test port");
-const baseUrl = `http://127.0.0.1:${port}`;
+const frontendPort = await availablePort();
+const backendPort = 3001;
+if (!frontendPort) throw new Error("Could not reserve a local frontend test port");
+const baseUrl = `http://127.0.0.1:${frontendPort}`;
+const backendUrl = `http://127.0.0.1:${backendPort}`;
 const nextBin = new URL("../node_modules/next/dist/bin/next", import.meta.url).pathname;
-const server = spawn(process.execPath, [nextBin, "start", "-H", "127.0.0.1", "-p", String(port)], {
-  cwd: process.cwd(),
-  env: { ...process.env, PORT: String(port) },
+const backend = spawn(process.execPath, [nextBin, "start", "-H", "127.0.0.1", "-p", String(backendPort)], {
+  cwd: new URL("../apps/backend", import.meta.url).pathname,
+  env: {
+    ...process.env,
+    PORT: String(backendPort),
+    FRONTEND_URL: baseUrl,
+    DATABASE_URL: "",
+  },
   stdio: ["ignore", "inherit", "inherit"],
 });
+const frontend = spawn(process.execPath, [nextBin, "start", "-H", "127.0.0.1", "-p", String(frontendPort)], {
+  cwd: new URL("../apps/frontend", import.meta.url).pathname,
+  env: { ...process.env, PORT: String(frontendPort), BACKEND_API_URL: backendUrl },
+  stdio: ["ignore", "inherit", "inherit"],
+});
+const servers = [backend, frontend];
 
 let exitCode = 1;
 try {
-  await waitUntilReady(baseUrl, server);
+  await waitUntilReady(`${backendUrl}/api/health`, servers);
+  await waitUntilReady(baseUrl, servers);
   const testFiles = readdirSync("tests")
     .filter((file) => file.endsWith(".test.mjs"))
     .sort()
@@ -56,12 +71,13 @@ try {
     runner.once("exit", (code) => resolve(code ?? 1));
   });
 } finally {
-  if (server.exitCode == null) {
-    await new Promise((resolve) => {
+  await Promise.all(servers.map((server) => {
+    if (server.exitCode != null) return Promise.resolve();
+    return new Promise((resolve) => {
       server.once("exit", resolve);
       server.kill("SIGTERM");
     });
-  }
+  }));
 }
 
 process.exit(exitCode);

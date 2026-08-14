@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isNotificationTemplateKey, renderNotification } from "../messaging/templates.ts";
-import { normalizeIndianMobile } from "../messaging/providers/msg91.ts";
-import { normalizeWhatsAppRecipient } from "../messaging/providers/meta-whatsapp.ts";
+import { isNotificationTemplateKey, renderNotification } from "../apps/backend/src/modules/messaging/templates.ts";
+import { normalizeIndianMobile } from "../apps/backend/src/modules/messaging/providers/msg91.ts";
+import { normalizeWhatsAppRecipient } from "../apps/backend/src/modules/messaging/providers/meta-whatsapp.ts";
 
 test("normalizes Indian SMS recipients", () => {
   assert.equal(normalizeIndianMobile("+91 98765 43210"), "919876543210");

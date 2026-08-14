@@ -1,0 +1,24 @@
+{
+  "name": "@divine-stone/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build --webpack",
+    "start": "next start --port 3001",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1106.0",
+    "@aws-sdk/s3-request-presigner": "^3.1106.0",
+    "@clerk/backend": "^3.16.1",
+    "@divine-stone/database": "0.1.0",
+    "@divine-stone/shared": "0.1.0",
+    "drizzle-orm": "0.45.2",
+    "next": "^16.3.0",
+    "pg": "^8.23.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  }
+}

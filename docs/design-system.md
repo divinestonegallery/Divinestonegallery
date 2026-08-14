@@ -31,10 +31,9 @@ Gold is an accent, not a background for large areas. Avoid bright yellow-gold gr
 ## Logo system
 
 - `logo-horizontal.jpg`: website header, footer, documents, and email.
-- `logo-square.jpg`: social profiles and square brand placements.
+- `logo-square-warm.jpg`: compact website and staff-console identity.
 - `lotus-mark.jpg`: favicon, compact mobile identity, and loading states.
-- `logo-animation-horizontal-web.m4v`: optional desktop brand reveal.
-- `logo-animation-vertical-web.m4v`: optional mobile brand reveal.
+- `logo-animation-horizontal-web.m4v`: compressed website brand reveal.
 - Do not stretch, recolour, rotate, outline, or place the logo over busy imagery.
 - Preserve clear space around the mark equal to at least half the lotus height.
 - Never force visitors to watch the logo animation before shopping.

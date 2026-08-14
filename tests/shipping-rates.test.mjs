@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   combineCommonCouriers,
   parseShiprocketRates,
-} from "../shipping/providers/shiprocket.ts";
+} from "../apps/backend/src/modules/shipping/providers/shiprocket.ts";
 
 test("normalizes Shiprocket rupee rates into integer paise", () => {
   const rates = parseShiprocketRates({

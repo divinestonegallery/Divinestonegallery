@@ -1,32 +1,30 @@
 {
-  "name": "divine-stone-gallery",
+  "name": "divine-stone-gallery-monorepo",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "engines": {
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build --webpack",
-    "start": "next start",
+    "dev": "node --env-file-if-exists=.env.local scripts/run-workspaces.mjs dev",
+    "dev:frontend": "npm run dev --workspace @divine-stone/frontend",
+    "dev:backend": "npm run dev --workspace @divine-stone/backend",
+    "build": "node --env-file-if-exists=.env.local scripts/run-workspaces.mjs build",
+    "build:frontend": "npm run build --workspace @divine-stone/frontend",
+    "build:backend": "npm run build --workspace @divine-stone/backend",
+    "start": "node --env-file-if-exists=.env.local scripts/run-workspaces.mjs start",
     "test": "npm run build && node scripts/run-tests.mjs",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate",
+    "lint": "eslint apps packages scripts tests --ignore-pattern .next",
+    "check:boundaries": "node scripts/check-workspace-boundaries.mjs",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:generate": "node --env-file-if-exists=.env.local ./node_modules/drizzle-kit/bin.cjs generate --config packages/database/drizzle.config.ts",
     "deploy:check": "node --env-file-if-exists=.env.local scripts/check-deployment.mjs",
-    "release:verify": "npm run deploy:check && npm test && npm run lint",
-    "db:migrate": "node --env-file-if-exists=.env.local ./node_modules/drizzle-kit/bin.cjs migrate"
-  },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.1106.0",
-    "@aws-sdk/s3-request-presigner": "^3.1106.0",
-    "@clerk/backend": "^3.16.1",
-    "@clerk/react": "^6.13.1",
-    "drizzle-orm": "0.45.2",
-    "lucide-react": "^1.30.0",
-    "next": "^16.3.0",
-    "pg": "^8.23.0",
-    "react": "19.2.6",
-    "react-dom": "19.2.6"
+    "release:verify": "npm run deploy:check && npm run check:boundaries && npm test && npm run lint",
+    "db:migrate": "node --env-file-if-exists=.env.local ./node_modules/drizzle-kit/bin.cjs migrate --config packages/database/drizzle.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",
