@@ -1,6 +1,6 @@
 # Divine Stone Gallery — API Contract Outline
 
-All production endpoints are server routes under `/api/v1`. JSON error responses use a stable shape:
+All production endpoints are backend routes under `/api/v1`. The frontend proxies the same path so browsers use the website origin. JSON error responses use a stable shape:
 
 ```json
 {
@@ -18,6 +18,9 @@ Write endpoints accept an `Idempotency-Key` header where duplicate submission co
 
 - `GET /products` — filter by category, deity, size, availability and sales mode.
 - `GET /products/:slug` — product, active variants, media and approved reviews.
+- `GET /content/pages` — published CMS page summaries.
+- `GET /content/pages/:slug` — one published CMS page and its visible sections.
+- `GET /content/business-settings` — public contact and business settings.
 - `GET /media/:id` — stream an approved public product image from S3-compatible storage.
 - `GET /categories`
 - `GET /deities`
@@ -28,6 +31,7 @@ Write endpoints accept an `Idempotency-Key` header where duplicate submission co
 - `GET /sign-in/*` — Clerk-hosted sign-in flow inside the gallery website.
 - `GET /sign-up/*` — Clerk-hosted registration flow inside the gallery website.
 - `POST /auth/sync` — verify the Clerk session and prepare the PostgreSQL customer record.
+- `GET /auth/session` — confirm whether the forwarded Clerk session is authenticated.
 - `GET /me`
 - `PATCH /me` — currently updates the optional transactional WhatsApp preference and writes an auditable consent event.
 - `GET|POST /me/addresses`

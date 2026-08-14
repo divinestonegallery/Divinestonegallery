@@ -1,15 +1,21 @@
 # Divine Stone Gallery
 
-Provider-neutral full-stack Next.js storefront and operations system for ready-made marble moortis and custom commissions. The public website, customer accounts, staff console and `/api/v1` backend deploy together from one Git repository to Vercel or AWS.
+One Git repository containing two independently buildable Next.js applications:
 
-## Stack
+- `apps/frontend` — public storefront, customer account pages and staff admin UI.
+- `apps/backend` — versioned `/api/v1` routes, authorization and business workflows.
+- `packages/database` — PostgreSQL connection, Drizzle schema and reviewed migrations.
+- `packages/shared` — framework-independent types and safe fallback catalogue data.
 
-- Next.js 16 and React 19 on the Node.js runtime
-- PostgreSQL with Drizzle ORM and reviewed SQL migrations
-- Private S3-compatible object storage for product and commission media
-- Clerk authentication
+The browser always calls `/api/v1`. During local development the frontend proxies that path to the backend at `http://127.0.0.1:3001`, so Clerk cookies and existing frontend requests continue to work without cross-origin browser code.
+
+## Technology
+
+- Next.js 16 and React 19
+- PostgreSQL with Drizzle ORM
+- Clerk authentication and backend authorization
+- ImageKit or S3-compatible media storage
 - Razorpay, Shiprocket, Resend, MSG91 and Meta WhatsApp integrations
-- Vercel Cron or AWS EventBridge for retried notification delivery
 
 ## Local development
 
@@ -22,35 +28,33 @@ npm run db:migrate
 npm run dev
 ```
 
-Open `http://localhost:3000`. The frontend and API run in the same Next.js application. Use local/test provider credentials in `.env.local`; never commit that file or place secrets in `NEXT_PUBLIC_` variables.
+Open:
 
-## Database
+- Frontend: `http://127.0.0.1:3000`
+- Backend health: `http://127.0.0.1:3001/api/health`
+- Backend API: `http://127.0.0.1:3001/api/v1`
 
-`db/schema.ts` is canonical and PostgreSQL migrations live in `drizzle/`.
+`npm run dev` starts both applications and loads the root `.env.local`. Use `npm run dev:frontend` or `npm run dev:backend` only when deliberately working on one service and supplying its environment separately.
 
-```bash
-npm run db:generate
-npm run db:migrate
-```
-
-The first migration creates all 34 tables and constraints. The second idempotently seeds the nine launch catalogue products.
-
-## Release verification
-
-Set `DEPLOYMENT_TARGET=vercel` or `DEPLOYMENT_TARGET=aws`, complete `.env.local`, then run:
+## Useful commands
 
 ```bash
-npm run deploy:check
-npm run release:verify
+npm run typecheck       # Type-check every workspace
+npm run check:boundaries # Prevent frontend/backend dependency leaks
+npm run build           # Build backend, then frontend
+npm test                # Build and run unit + end-to-end tests
+npm run lint            # Lint apps, packages, scripts and tests
+npm run db:generate     # Generate a reviewed Drizzle migration
+npm run db:migrate      # Apply pending PostgreSQL migrations
 ```
 
-The readiness gate blocks incomplete legal identity, PostgreSQL, S3, authentication, payment, shipping or messaging configuration. The full release command then builds Next.js, starts the production server, tests all routes and providers, and runs lint.
+## Code ownership rules
 
-## Deployment
+- Frontend files must not import backend modules or database code.
+- Backend files must not import React UI, frontend components or frontend assets.
+- Cross-application data shapes belong in `packages/shared`.
+- All database access goes through `packages/database` and backend repositories.
+- Frontend server components read backend data through `apps/frontend/src/server/backend-api-client.ts`.
+- Browser components keep using relative `/api/v1/...` URLs, which the frontend proxy forwards.
 
-- Vercel detects Next.js and uses `vercel.json` for the notification schedule.
-- AWS can run the included production `Dockerfile` on ECS, App Runner or another container service.
-- Both targets use `DATABASE_URL` and the same S3-compatible storage interface.
-- Configure the Clerk and Razorpay webhook URLs after the final domain is connected.
-
-See the [deployment runbook](docs/deployment.md), [architecture](docs/architecture.md) and [launch checklist](docs/launch-readiness.md).
+See [project structure](docs/project-structure.md), [architecture](docs/architecture.md), [API contract](docs/api-contract.md) and [deployment runbook](docs/deployment.md).

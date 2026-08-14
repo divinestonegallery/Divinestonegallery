@@ -1,0 +1,15 @@
+{
+  "name": "@divine-stone/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./catalog": "./src/catalog.ts",
+    "./content": "./src/content.ts",
+    "./admin": "./src/admin.ts",
+    "./product": "./src/product.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

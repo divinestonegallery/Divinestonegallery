@@ -1,6 +1,8 @@
 # Deployment runbook
 
-The storefront, account area, staff console and `/api/v1` backend deploy together as one standard Next.js application. The same GitHub repository can target Vercel or AWS.
+The same GitHub repository contains two deployable applications. The storefront, account area and staff console use `apps/frontend`; `/api/v1`, database access and provider integrations use `apps/backend`.
+
+This branch currently validates the separation locally. Do not change the live projects until both new deployment projects have been configured and tested as a preview.
 
 ## Shared infrastructure
 
@@ -22,16 +24,16 @@ npm run release:verify
 
 ## Vercel
 
-1. Import the private GitHub repository into Vercel.
-2. Connect a managed PostgreSQL database and add its pooled `DATABASE_URL`.
-3. Add the ImageKit variables from `.env.example`, or configure the optional private S3 fallback.
-4. Add `CRON_SECRET` with at least 32 random characters. On Vercel Hobby, `vercel.json` invokes the protected notification worker once daily at 03:00 UTC (08:30 IST). Staff can process the queue immediately from `/admin/notifications`. On Vercel Pro, change the schedule to `*/5 * * * *` for automatic five-minute delivery attempts.
-5. Add all business and provider environment variables to Preview and Production separately.
-6. Deploy a preview, run the smoke tests, then promote the validated build.
+1. Import the same private GitHub repository as a **backend** project and set its Root Directory to `apps/backend`.
+2. Add PostgreSQL, Clerk server, ImageKit, Razorpay, Shiprocket and messaging variables to the backend project. Set `FRONTEND_URL` to the frontend preview or production origin.
+3. Import the repository again as a **frontend** project and set its Root Directory to `apps/frontend`.
+4. Add `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `BACKEND_API_URL` to the frontend project. `BACKEND_API_URL` must be the backend project origin.
+5. Add `CRON_SECRET` with at least 32 random characters to the backend. `apps/backend/vercel.json` invokes the protected notification worker once daily on Vercel Hobby.
+6. Deploy both as previews. Verify the backend health route, then the frontend pages, authentication and `/api/v1` proxy before changing production domains.
 
 ## AWS
 
-1. Build the included `Dockerfile`, publish the image to Amazon ECR and run it through ECS/Fargate, App Runner or another AWS container service.
+1. Create separate frontend and backend container images from their workspace builds. The previous single-application root `Dockerfile` must not be used for the separated architecture.
 2. Use PostgreSQL through RDS/Aurora or another reachable PostgreSQL provider. Use connection pooling or RDS Proxy for serverless traffic.
 3. Attach an IAM role limited to the application’s private S3 bucket, or set restricted S3 credentials.
 4. Schedule an EventBridge API Destination to call `GET /api/v1/internal/notifications/process` with `Authorization: Bearer <NOTIFICATION_WORKER_SECRET>` every five minutes.

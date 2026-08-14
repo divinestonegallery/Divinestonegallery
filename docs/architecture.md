@@ -27,10 +27,9 @@ This architecture supports the agreed India-first business model:
 
 ```mermaid
 flowchart LR
-  Customer["Customer browser"] --> App["Next.js storefront + account"]
-  Staff["Staff browser"] --> Admin["Next.js admin area"]
-  App --> API["Server route layer /api/v1"]
-  Admin --> API
+  Customer["Customer browser"] --> Frontend["Frontend application"]
+  Staff["Staff browser"] --> Frontend
+  Frontend -->|"same-origin /api/v1 proxy"| API["Backend application"]
   API --> Auth["Clerk authentication"]
   API --> DB["PostgreSQL via DATABASE_URL"]
   API --> Media["Private S3-compatible storage"]
@@ -43,7 +42,7 @@ flowchart LR
   Webhooks --> API
 ```
 
-The storefront and admin area live in one application, but all authoritative writes pass through server routes. Browser storage may keep temporary UI preferences, but it is not the source of truth for accounts, wishlist items, carts, stock, orders or commission progress.
+The storefront, customer account and admin interface live in the frontend application. API handlers, authorization, business workflows and provider integrations live in the backend application. Both remain in one npm-workspace repository and build independently. All authoritative writes pass through the backend. Browser storage may keep temporary UI preferences, but it is not the source of truth for accounts, wishlist items, carts, stock, orders or commission progress.
 
 Signed-out visitors may build a temporary wishlist and enquiry bag in browser storage. On the first authenticated collection request, those product IDs are validated and merged idempotently into the customer's PostgreSQL wishlist and active quote-intent cart. Local values are erased only after the server confirms the merge; from then on, every mutation is authorized from the Clerk token and written to PostgreSQL.
 
@@ -51,7 +50,7 @@ Signed-out visitors may build a temporary wishlist and enquiry bag in browser st
 
 Runtime resources are provider-neutral: `DATABASE_URL` connects PostgreSQL, while `IMAGEKIT_*` or `S3_*` variables connect media storage. Vercel and AWS supply these values through their encrypted environment settings.
 
-`db/schema.ts` is the canonical Drizzle schema. Generated SQL lives in `drizzle/` and must be reviewed before it is applied. `db/index.ts` is the only database connection entry point. `storage/media.ts` is the media adapter entry point.
+`packages/database/src/schema.ts` is the canonical Drizzle schema. Generated SQL lives in `packages/database/drizzle/` and must be reviewed before it is applied. `packages/database/src/index.ts` is the only database connection entry point. `apps/backend/src/modules/storage/media.ts` is the media adapter entry point.
 
 Database conventions:
 

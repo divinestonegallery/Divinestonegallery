@@ -7,7 +7,7 @@ import {
   validateRemotePayment,
   verifyRazorpayCheckoutSignature,
   verifyRazorpayWebhookSignature,
-} from "../payments/providers/razorpay.ts";
+} from "../apps/backend/src/modules/payments/providers/razorpay.ts";
 
 test("verifies Razorpay checkout signatures against the server order id", async () => {
   const orderId = "order_DSGtest123";

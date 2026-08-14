@@ -92,7 +92,7 @@ test("serves the public catalogue API with products and active filter options", 
   assert.ok(payload.data.length >= 9);
   assert.equal(payload.meta.total, payload.data.length);
   assert.ok(payload.data.every((product) => product.id && product.slug && product.deity));
-  assert.ok(payload.meta.deities.includes("Hanuman Ji"));
+  assert.ok(payload.meta.deities.includes("Ganesha"));
   assert.ok(payload.meta.categories.includes("Deity Idol"));
 });
 

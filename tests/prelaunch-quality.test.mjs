@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { serializeJsonLd } from "../components/site/serialize-json-ld.ts";
-import { declaredBodyExceeds, readTextWithinLimit } from "../security/request-limits.ts";
+import { serializeJsonLd } from "../apps/frontend/src/components/site/serialize-json-ld.ts";
+import { declaredBodyExceeds, readTextWithinLimit } from "../apps/backend/src/modules/security/request-limits.ts";
 
 test("escapes markup-significant characters in structured data", () => {
   const value = serializeJsonLd({ description: "</script><script>alert(1)</script>" });

@@ -102,18 +102,24 @@ for (const [key, maximum] of [["READY_MADE_RETURN_WINDOW_DAYS", 30], ["DAMAGE_RE
 templateMap("MSG91_SMS_TEMPLATE_MAP_JSON");
 templateMap("WHATSAPP_TEMPLATE_MAP_JSON");
 
-if (!existsSync("drizzle/meta/_journal.json")) failures.push("Database migration journal is missing");
+if (!existsSync("packages/database/drizzle/meta/_journal.json")) failures.push("Database migration journal is missing");
 else {
   try {
-    const journal = JSON.parse(readFileSync("drizzle/meta/_journal.json", "utf8"));
+    const journal = JSON.parse(readFileSync("packages/database/drizzle/meta/_journal.json", "utf8"));
     if (journal.dialect !== "postgresql" || !journal.entries?.length) throw new Error();
   } catch {
     failures.push("Database migration journal must contain PostgreSQL migrations");
   }
 }
-if (!existsSync("next.config.ts")) failures.push("Standard Next.js configuration is missing");
-if (value("DEPLOYMENT_TARGET") === "vercel" && !existsSync("vercel.json")) failures.push("Vercel configuration is missing");
-if (value("DEPLOYMENT_TARGET") === "aws" && !existsSync("Dockerfile")) failures.push("AWS-compatible Dockerfile is missing");
+if (!existsSync("apps/frontend/next.config.ts")) failures.push("Frontend Next.js configuration is missing");
+if (!existsSync("apps/backend/next.config.ts")) failures.push("Backend Next.js configuration is missing");
+if (value("DEPLOYMENT_TARGET") === "vercel" && !existsSync("apps/backend/vercel.json")) failures.push("Backend Vercel configuration is missing");
+if (
+  value("DEPLOYMENT_TARGET") === "aws" &&
+  (!existsSync("apps/frontend/Dockerfile") || !existsSync("apps/backend/Dockerfile"))
+) {
+  failures.push("Separate AWS-compatible frontend and backend Dockerfiles are missing");
+}
 
 if (failures.length) {
   console.error("Deployment readiness check failed:\n");
