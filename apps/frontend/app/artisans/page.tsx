@@ -21,8 +21,9 @@ import { SiteHeader } from "@/components/site/site-header";
 import { WhatsAppAssistance } from "@/components/site/whatsapp-assistance";
 import { buttonClassName } from "@/components/ui/button";
 import { ToastProvider } from "@/components/ui/toast";
-import { getPublishedPage } from "@/server/backend-api-client";
+import { getPublicCatalog, getPublishedPage } from "@/server/backend-api-client";
 import { PublishedPageView } from "@/features/cms/published-page";
+import type { CatalogItem } from "@divine-stone/shared/catalog";
 import styles from "./artisans.module.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -40,7 +41,12 @@ const stages = [
   { icon: Palette, title: "Finishing the work", copy: "Natural-white or painted finishes are completed by hand according to the chosen direction." },
 ] as const;
 
-function StaticArtisansPage() {
+function StaticArtisansPage({ catalog }: { catalog: CatalogItem[] }) {
+  const gallery = [...catalog]
+    .sort((left, right) => left.featured - right.featured)
+    .slice(0, 3);
+  const galleryLabels = ["Ornamentation", "Expression", "Composition"];
+
   return (
     <ToastProvider>
       <SiteHeader />
@@ -137,9 +143,7 @@ function StaticArtisansPage() {
           <div className="site-container">
             <div className={styles.galleryHeading}><div><p className={styles.eyebrow}>The craft, completed</p><h2 className="font-display">Details in devotion.</h2></div><Link href="/shop">Explore all works <ArrowRight aria-hidden="true" size={16} /></Link></div>
             <div className={styles.galleryGrid}>
-              <Link href="/products/ornate-ganesh-24-inch-marble"><Image src="/catalog/ganesh-24.jpg" alt="Ornate hand-painted marble Ganesha" fill sizes="(max-width: 680px) 50vw, 33vw" /><span>Ornamentation</span></Link>
-              <Link href="/products/lakshmi-mata-24-inch-marble"><Image src="/catalog/lakshmi-24.jpg" alt="Hand-painted Lakshmi Mata marble moorti" fill sizes="(max-width: 680px) 50vw, 33vw" /><span>Expression</span></Link>
-              <Link href="/products/ram-darbar-24-inch-marble"><Image src="/catalog/ram-darbar-24.jpg" alt="Natural white Ram Darbar marble set" fill sizes="(max-width: 680px) 50vw, 33vw" /><span>Composition</span></Link>
+              {gallery.map((item, index) => <Link href={`/products/${item.slug}`} key={item.id}><Image src={item.image} alt={item.imageAlt} fill sizes="(max-width: 680px) 50vw, 33vw" /><span>{galleryLabels[index]}</span></Link>)}
             </div>
           </div>
         </section>
@@ -160,6 +164,6 @@ function StaticArtisansPage() {
 }
 
 export default async function ArtisansPage() {
-  const page = await getPublishedPage("artisans");
-  return page?.sections.length ? <PublishedPageView page={page} /> : <StaticArtisansPage />;
+  const [page, catalog] = await Promise.all([getPublishedPage("artisans"), getPublicCatalog()]);
+  return page?.sections.length ? <PublishedPageView page={page} catalog={catalog} /> : <StaticArtisansPage catalog={catalog} />;
 }

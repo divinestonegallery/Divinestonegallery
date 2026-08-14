@@ -19,8 +19,9 @@ import { WhatsAppAssistance } from "@/components/site/whatsapp-assistance";
 import { buttonClassName } from "@/components/ui/button";
 import { ToastProvider } from "@/components/ui/toast";
 import { brand } from "@/config/brand";
-import { getPublishedPage } from "@/server/backend-api-client";
+import { getPublicCatalog, getPublishedPage } from "@/server/backend-api-client";
 import { PublishedPageView } from "@/features/cms/published-page";
+import type { CatalogItem } from "@divine-stone/shared/catalog";
 import styles from "./page.module.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -117,7 +118,31 @@ const commissionSteps = [
   },
 ] as const;
 
-function StaticHome() {
+function StaticHome({ catalog }: { catalog: CatalogItem[] }) {
+  const currentDeityCollections = catalog.length
+    ? [...catalog]
+      .sort((left, right) => left.featured - right.featured)
+      .filter((item, index, items) => items.findIndex((candidate) => candidate.deity === item.deity) === index)
+      .slice(0, 6)
+      .map((item) => ({
+        name: item.deity,
+        note: `Explore ${item.deity} marble moorties`,
+        image: item.image,
+        href: `/shop?q=${encodeURIComponent(item.deity)}`,
+      }))
+    : deityCollections;
+  const currentFeaturedWorks = catalog.length
+    ? [...catalog]
+      .sort((left, right) => left.featured - right.featured)
+      .slice(0, 4)
+      .map((item) => ({
+        name: item.name,
+        detail: `${item.height} in · ${item.material}`,
+        image: item.image,
+        href: `/products/${item.slug}`,
+      }))
+    : featuredWorks;
+
   return (
     <ToastProvider>
       <SiteHeader animateLogo />
@@ -180,7 +205,7 @@ function StaticHome() {
               <p>Explore signature forms for home mandirs, temples, gifting and deeply personal commissions.</p>
             </div>
             <div className={styles.deityGrid}>
-              {deityCollections.map((collection) => (
+              {currentDeityCollections.map((collection) => (
                 <Link className={styles.deityCard} href={collection.href} key={collection.name}>
                   <Image src={collection.image} alt={`${collection.name} marble moorti collection`} fill sizes="(max-width: 680px) 50vw, (max-width: 1024px) 33vw, 17vw" />
                   <span className={styles.imageVeil} />
@@ -205,7 +230,7 @@ function StaticHome() {
               <Link href="/shop">View the collection <ArrowRight aria-hidden="true" size={17} /></Link>
             </div>
             <div className={styles.featuredGrid}>
-              {featuredWorks.map((work, index) => (
+              {currentFeaturedWorks.map((work, index) => (
                 <article className={styles.workCard} key={work.name}>
                   <Link className={styles.workImage} href={work.href} aria-label={`View ${work.name}`}>
                     <Image src={work.image} alt={work.name} fill sizes="(max-width: 680px) 50vw, (max-width: 1024px) 33vw, 25vw" priority={index === 0} />
@@ -322,6 +347,6 @@ function StaticHome() {
 }
 
 export default async function Home() {
-  const page = await getPublishedPage("home");
-  return page?.sections.length ? <PublishedPageView page={page} animateLogo /> : <StaticHome />;
+  const [page, catalog] = await Promise.all([getPublishedPage("home"), getPublicCatalog()]);
+  return page?.sections.length ? <PublishedPageView page={page} catalog={catalog} animateLogo /> : <StaticHome catalog={catalog} />;
 }

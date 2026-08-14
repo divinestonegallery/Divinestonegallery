@@ -6,21 +6,39 @@ import { CircleUserRound, LayoutDashboard } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuthConfigured } from "./auth-provider";
 
-export function AccountControl({ className }: { className?: string }) {
+export function AccountControl({
+  className,
+  signedOutClassName,
+}: {
+  className?: string;
+  signedOutClassName?: string;
+}) {
   const configured = useAuthConfigured();
+  const publicClassName = signedOutClassName ?? className;
 
   if (!configured) {
     return (
-      <Link className={className} href="/account" aria-label="Customer account">
+      <Link className={publicClassName} href="/sign-in" aria-label="Sign in to your account" title="Sign in">
         <CircleUserRound aria-hidden="true" size={21} strokeWidth={1.6} />
       </Link>
     );
   }
 
-  return <ConfiguredAccountControl className={className} />;
+  return (
+    <ConfiguredAccountControl
+      className={className}
+      signedOutClassName={signedOutClassName}
+    />
+  );
 }
 
-function ConfiguredAccountControl({ className }: { className?: string }) {
+function ConfiguredAccountControl({
+  className,
+  signedOutClassName,
+}: {
+  className?: string;
+  signedOutClassName?: string;
+}) {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -49,7 +67,7 @@ function ConfiguredAccountControl({ className }: { className?: string }) {
   return (
     <>
       <Show when="signed-out">
-        <Link className={className} href="/sign-in" aria-label="Sign in to your account">
+        <Link className={signedOutClassName ?? className} href="/sign-in" aria-label="Sign in to your account" title="Sign in">
           <CircleUserRound aria-hidden="true" size={21} strokeWidth={1.6} />
         </Link>
       </Show>

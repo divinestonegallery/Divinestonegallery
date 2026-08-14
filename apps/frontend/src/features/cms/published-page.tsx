@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { WhatsAppAssistance } from "@/components/site/whatsapp-assistance";
 import { ToastProvider } from "@/components/ui/toast";
+import type { CatalogItem } from "@divine-stone/shared/catalog";
 import type { PublishedPage, PublishedSection } from "@divine-stone/shared/content";
 import styles from "./published-page.module.css";
 
@@ -24,10 +25,50 @@ const featured: Item[] = [
 ];
 const fallbackImages: Record<string, string> = { hero: "/catalog/radha-krishna-39.jpg", "custom-commission": "/catalog/ram-darbar-24.jpg", "family-legacy": "/catalog/lakshmi-ganesh-saraswati-12.jpg" };
 
-function items(section: PublishedSection) {
+function configuredItems(section: PublishedSection) {
   const fallback = section.sectionKey === "shop-by-devotion" ? devotion : section.sectionKey === "featured-works" ? featured : [];
   try { const parsed = JSON.parse(section.contentJson) as unknown; return Array.isArray(parsed) && parsed.length ? parsed.slice(0, 30) as Item[] : fallback; }
   catch { return fallback; }
+}
+
+function items(section: PublishedSection, catalog: CatalogItem[]) {
+  const configured = configuredItems(section);
+  if (!catalog.length) return configured;
+
+  const limit = Math.min(Math.max(configured.length || 3, 1), 6);
+  if (section.sectionKey === "featured-works") {
+    return [...catalog]
+      .sort((left, right) => left.featured - right.featured)
+      .slice(0, limit)
+      .map((item) => ({
+        title: item.name,
+        body: `${item.height} in · ${item.material}`,
+        href: `/products/${item.slug}`,
+        image: item.image,
+      }));
+  }
+
+  if (section.sectionKey === "shop-by-devotion") {
+    const configuredByTitle = new Map(configured.map((item) => [item.title?.trim().toLowerCase(), item]));
+    const seen = new Set<string>();
+    return [...catalog]
+      .sort((left, right) => left.featured - right.featured)
+      .filter((item) => {
+        const key = item.deity.trim().toLowerCase();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, limit)
+      .map((item) => ({
+        title: item.deity,
+        body: configuredByTitle.get(item.deity.trim().toLowerCase())?.body ?? `Explore ${item.deity} marble moorties`,
+        href: `/shop?q=${encodeURIComponent(item.deity)}`,
+        image: item.image,
+      }));
+  }
+
+  return configured;
 }
 function customerFacingLabel(label: string) {
   return /^commission a (murti|moorti)$/i.test(label.trim()) ? "Customize Your Moorti" : label;
@@ -35,8 +76,8 @@ function customerFacingLabel(label: string) {
 
 function action(label: string | null, href: string | null, secondary = false) { return label && href ? <Link className={secondary ? styles.secondary : styles.primary} href={href}>{customerFacingLabel(label)}<ArrowRight size={15} /></Link> : null; }
 
-function Block({ section, first, homeHero }: { section: PublishedSection; first: boolean; homeHero: boolean }) {
-  const rows = items(section); const image = section.mediaPath ?? fallbackImages[section.sectionKey] ?? (first ? fallbackImages.hero : null);
+function Block({ section, first, homeHero, catalog }: { section: PublishedSection; first: boolean; homeHero: boolean; catalog: CatalogItem[] }) {
+  const rows = items(section, catalog); const image = section.mediaPath ?? fallbackImages[section.sectionKey] ?? (first ? fallbackImages.hero : null);
   if (section.blockType === "hero") return (
     <section className={`${styles.hero} ${homeHero ? styles.videoHero : ""}`} data-tone={section.styleVariant}>
       {homeHero ? (
@@ -73,6 +114,6 @@ function Block({ section, first, homeHero }: { section: PublishedSection; first:
   return <section className={styles.split} data-tone={section.styleVariant} data-media={section.mediaPosition}><div className="site-container">{image ? <div className={styles.splitImage}><Image src={image} alt={section.mediaAltText ?? section.heading ?? "Marble sculpture"} fill sizes="(max-width: 850px) 100vw, 48vw" /></div> : null}<div className={styles.splitCopy}><small>{section.eyebrow}</small><h2 className="font-display">{section.heading}</h2><p>{section.body}</p><div className={styles.actions}>{action(section.ctaLabel, section.ctaHref)}{action(section.secondaryCtaLabel, section.secondaryCtaHref, true)}</div></div></div></section>;
 }
 
-export function PublishedPageView({ page, animateLogo = false, protectedContent }: { page: PublishedPage; animateLogo?: boolean; protectedContent?: ReactNode }) {
-  return <ToastProvider><SiteHeader animateLogo={animateLogo} /><main id="main-content" tabIndex={-1}>{page.sections.map((section, index) => <Block section={section} first={index === 0} homeHero={page.slug === "home" && index === 0} key={section.id} />)}{protectedContent}</main><SiteFooter /><WhatsAppAssistance elevated={page.slug === "home"} /><CookieConsent /></ToastProvider>;
+export function PublishedPageView({ page, animateLogo = false, protectedContent, catalog = [] }: { page: PublishedPage; animateLogo?: boolean; protectedContent?: ReactNode; catalog?: CatalogItem[] }) {
+  return <ToastProvider><SiteHeader animateLogo={animateLogo} /><main id="main-content" tabIndex={-1}>{page.sections.map((section, index) => <Block section={section} first={index === 0} homeHero={page.slug === "home" && index === 0} catalog={catalog} key={section.id} />)}{protectedContent}</main><SiteFooter /><WhatsAppAssistance elevated={page.slug === "home"} /><CookieConsent /></ToastProvider>;
 }

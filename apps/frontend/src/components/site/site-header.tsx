@@ -16,15 +16,11 @@ import {
 } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useId, useRef, useState } from "react";
 import { AccountControl } from "@/features/auth/account-control";
+import { useAuthConfigured } from "@/features/auth/auth-provider";
 import { useEnquiryBag, useSavedWorks } from "@/features/customer/device-collections";
 import styles from "./site-shell.module.css";
 
 const defaultDeityLinks = [
-  ["Ganesha", "/shop?q=Ganesha"],
-  ["Radha Krishna", "/shop?q=Radha%20Krishna"],
-  ["Shiva", "/shop?q=Shiva"],
-  ["Lakshmi", "/shop?q=Lakshmi"],
-  ["Saraswati", "/shop?q=Saraswati"],
   ["View all deities", "/shop"],
 ] as const;
 
@@ -35,11 +31,9 @@ const materialLinks = [
   ["Material Guide", "/guides/materials"],
 ] as const;
 
-const featuredLinks = [
+const defaultFeaturedLinks = [
   ["All Moorties", "/shop"],
-  ["Divine Families", "/shop?q=Divine%20Family"],
-  ["Wall Sculptures", "/shop?q=Wall%20Sculpture"],
-  ["Custom Commissions", "/custom-murti"],
+  ["Customize Your Moorti", "/custom-murti"],
   ["Sizing Guide", "/guides/sizing"],
 ] as const;
 
@@ -52,6 +46,7 @@ const mainLinks = [
 
 export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
   const pathname = usePathname();
+  const authConfigured = useAuthConfigured();
   const savedWorks = useSavedWorks();
   const enquiryBag = useEnquiryBag();
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
@@ -60,6 +55,7 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [logoAnimationFinished, setLogoAnimationFinished] = useState(false);
   const [deityLinks, setDeityLinks] = useState<ReadonlyArray<readonly [string, string]>>(defaultDeityLinks);
+  const [featuredLinks, setFeaturedLinks] = useState<ReadonlyArray<readonly [string, string]>>(defaultFeaturedLinks);
   const logoVideoRef = useRef<HTMLVideoElement>(null);
   const shopTriggerRef = useRef<HTMLButtonElement>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
@@ -85,18 +81,24 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
     let cancelled = false;
     void fetch("/api/v1/products?limit=100", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : Promise.reject())
-      .then((payload: { data?: Array<{ deity?: string }>; meta?: { deities?: string[] } }) => {
+      .then((payload: { data?: Array<{ deity?: string; category?: string }>; meta?: { deities?: string[] } }) => {
         if (cancelled) return;
-        const names = [...new Set([
-          ...(payload.meta?.deities ?? []),
-          ...(payload.data ?? []).map((item) => item.deity?.trim()).filter((name): name is string => Boolean(name)),
-        ])];
+        const products = payload.data ?? [];
+        const productDeities = products.map((item) => item.deity?.trim()).filter((name): name is string => Boolean(name));
+        const names = [...new Set(productDeities.length ? productDeities : (payload.meta?.deities ?? []))];
         if (names.length) {
           setDeityLinks([
             ...names.slice(0, 8).map((name) => [name, `/shop?q=${encodeURIComponent(name)}`] as const),
             ["View all deities", "/shop"],
           ]);
         }
+        const categories = [...new Set(products.map((item) => item.category?.trim()).filter((name): name is string => Boolean(name)))];
+        setFeaturedLinks([
+          ["All Moorties", "/shop"],
+          ...categories.slice(0, 2).map((name) => [name, `/shop?q=${encodeURIComponent(name)}`] as const),
+          ["Customize Your Moorti", "/custom-murti"],
+          ["Sizing Guide", "/guides/sizing"],
+        ]);
       })
       .catch(() => undefined);
     return () => { cancelled = true; };
@@ -211,17 +213,23 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
           </Link>
 
           <nav className={styles.desktopNav} aria-label="Main navigation">
-            <button
-              ref={shopTriggerRef}
-              className={styles.navLink}
-              type="button"
-              aria-controls={shopMenuId}
-              aria-expanded={megaMenuOpen}
-              onClick={() => megaMenuOpen ? closeMegaMenu() : openMegaMenu()}
-            >
-              Shop
-              <span aria-hidden="true" className={`${styles.chevron} ${megaMenuOpen && !megaMenuClosing ? styles.chevronOpen : ""}`}>⌄</span>
-            </button>
+            <div className={styles.shopNavGroup}>
+              <Link className={styles.navLink} href="/shop" onClick={closeMegaMenu}>
+                Shop
+              </Link>
+              <button
+                ref={shopTriggerRef}
+                className={styles.shopMenuButton}
+                type="button"
+                aria-label={megaMenuOpen ? "Close Shop menu" : "Open Shop menu"}
+                aria-controls={shopMenuId}
+                aria-expanded={megaMenuOpen}
+                aria-haspopup="true"
+                onClick={() => megaMenuOpen ? closeMegaMenu() : openMegaMenu()}
+              >
+                <span aria-hidden="true" className={`${styles.chevron} ${megaMenuOpen && !megaMenuClosing ? styles.chevronOpen : ""}`}>⌄</span>
+              </button>
+            </div>
             {mainLinks.map(([label, href]) => (
               <Link className={styles.navLink} href={href} key={href}>
                 {label}
@@ -248,7 +256,10 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
             >
               <MessageCircle aria-hidden="true" size={21} strokeWidth={1.6} />
             </a>
-            <AccountControl className={`${styles.headerAction} ${styles.desktopOnlyAction}`} />
+            <AccountControl
+              className={`${styles.headerAction} ${styles.desktopOnlyAction}`}
+              signedOutClassName={`${styles.headerAction} ${styles.desktopOnlyAction} ${styles.accountSignInAction}`}
+            />
             <Link className={`${styles.headerAction} ${styles.desktopOnlyAction}`} href="/wishlist" aria-label={`Wishlist with ${savedWorks.count} saved ${savedWorks.count === 1 ? "work" : "works"}`}>
               <Heart aria-hidden="true" size={21} strokeWidth={1.6} />
               {savedWorks.count ? <span className={styles.actionBadge}>{savedWorks.count}</span> : null}
@@ -352,9 +363,7 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
               </form>
               <div className={styles.quickSearches}>
                 <span>Popular:</span>
-                <Link href="/shop?q=Ganesha">Ganesha</Link>
-                <Link href="/shop?q=Radha%20Krishna">Radha Krishna</Link>
-                <Link href="/shop?q=Lakshmi">Lakshmi</Link>
+                {deityLinks.filter(([label]) => label !== "View all deities").slice(0, 3).map(([label, href]) => <Link href={href} key={href}>{label}</Link>)}
               </div>
             </div>
           </section>
@@ -411,7 +420,7 @@ export function SiteHeader({ animateLogo = false }: { animateLogo?: boolean }) {
         <Link className={pathname.startsWith("/shop") || pathname.startsWith("/products/") ? styles.mobileNavActive : undefined} href="/shop" aria-current={pathname.startsWith("/shop") || pathname.startsWith("/products/") ? "page" : undefined}><ShoppingBag aria-hidden="true" size={20} /><span>Shop</span></Link>
         <Link className={pathname.startsWith("/custom-murti") ? styles.mobileNavActive : undefined} href="/custom-murti" aria-current={pathname.startsWith("/custom-murti") ? "page" : undefined}><Sparkles aria-hidden="true" size={20} /><span>Custom</span></Link>
         <Link className={pathname.startsWith("/wishlist") ? styles.mobileNavActive : undefined} href="/wishlist" aria-current={pathname.startsWith("/wishlist") ? "page" : undefined}><Heart aria-hidden="true" size={20} /><span>Wishlist{savedWorks.count ? ` (${savedWorks.count})` : ""}</span></Link>
-        <Link className={pathname.startsWith("/account") ? styles.mobileNavActive : undefined} href="/account" aria-current={pathname.startsWith("/account") ? "page" : undefined}><CircleUserRound aria-hidden="true" size={20} /><span>Account</span></Link>
+        <Link className={pathname.startsWith("/account") || pathname.startsWith("/sign-in") ? styles.mobileNavActive : undefined} href={authConfigured ? "/account" : "/sign-in"} aria-current={pathname.startsWith("/account") || pathname.startsWith("/sign-in") ? "page" : undefined}><CircleUserRound aria-hidden="true" size={20} /><span>{authConfigured ? "Account" : "Sign in"}</span></Link>
       </nav>
     </>
   );

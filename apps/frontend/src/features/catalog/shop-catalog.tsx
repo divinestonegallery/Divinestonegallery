@@ -27,6 +27,10 @@ type Filters = {
 
 const initialFilters: Filters = { category: "All", deity: "All", size: "All" };
 
+function normalizeSearch(value: string) {
+  return value.toLowerCase().replace(/[-–—_]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function FilterControls({ filters, setFilters, categories, deities }: { filters: Filters; setFilters: (filters: Filters) => void; categories: string[]; deities: string[] }) {
   return (
     <div className={styles.filterControls}>
@@ -94,7 +98,7 @@ export function ShopCatalog({ breadcrumbs, products: catalogProducts, availableC
   const deities = useMemo(() => ["All", ...Array.from(new Set([...availableDeities, ...catalogProducts.map((item) => item.deity)]))], [availableDeities, catalogProducts]);
 
   const products = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = normalizeSearch(query);
     const result = catalogProducts.filter((item) => {
       const matchesCategory = filters.category === "All" || item.category === filters.category;
       const matchesDeity = filters.deity === "All" || item.deity === filters.deity;
@@ -102,10 +106,9 @@ export function ShopCatalog({ breadcrumbs, products: catalogProducts, availableC
         || (filters.size === "compact" && item.height <= 12)
         || (filters.size === "medium" && item.height >= 13 && item.height <= 24)
         || (filters.size === "large" && item.height > 24);
-      const matchesQuery = !normalizedQuery || [item.name, item.deity, item.category, item.material, item.finish]
-        .join(" ")
-        .toLowerCase()
-        .includes(normalizedQuery);
+      const matchesQuery = !normalizedQuery || normalizeSearch(
+        [item.name, item.deity, item.category, item.material, item.finish].join(" "),
+      ).includes(normalizedQuery);
 
       return matchesCategory && matchesDeity && matchesSize && matchesQuery;
     });

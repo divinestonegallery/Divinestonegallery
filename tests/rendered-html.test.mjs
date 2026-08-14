@@ -32,6 +32,15 @@ test("server-renders the Divine Stone Gallery homepage", async () => {
   assert.equal(response.headers.get("x-frame-options"), "SAMEORIGIN");
   assert.equal(response.headers.get("cross-origin-opener-policy"), "same-origin-allow-popups");
   assert.match(response.headers.get("content-security-policy") ?? "", /frame-ancestors 'self'/i);
+
+  const productLinks = [...new Set(
+    [...html.matchAll(/href=["'](\/products\/[^"'#?]+)["']/gi)].map((match) => match[1]),
+  )];
+  assert.ok(productLinks.length >= 3, "the homepage should link to current featured products");
+  for (const productLink of productLinks) {
+    const productResponse = await render(productLink);
+    assert.equal(productResponse.status, 200, `${productLink} should resolve from the homepage`);
+  }
 });
 
 test("renders every customer-facing route", async () => {
@@ -157,6 +166,10 @@ test("serves robots and sitemap metadata routes", async () => {
   assert.equal(sitemap.status, 200);
   const xml = await sitemap.text();
   assert.match(xml, /<urlset/i);
-  assert.match(xml, /\/products\/radha-krishna-39-inch-marble/i);
+  const catalogue = await render("/api/v1/products");
+  const products = (await catalogue.json()).data;
+  for (const product of products) {
+    assert.match(xml, new RegExp(`/products/${product.slug}`, "i"), `${product.slug} should be in the sitemap`);
+  }
   assert.doesNotMatch(xml, /<lastmod>/i);
 });
